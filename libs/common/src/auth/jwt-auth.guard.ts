@@ -1,52 +1,22 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { Reflector } from "@nestjs/core";
-import { JwtService } from "@nestjs/jwt";
-import { Request } from "express";
-import { UserPayload } from "../interfaces/user.interface";
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+import { Observable } from 'rxjs';
+import { IS_PUBLIC_KEY } from '../common.decorator';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
-  constructor(
-    private jwtService: JwtService,
-    private reflector: Reflector,
-    private configService: ConfigService
-  ) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
-
-    if (!token) {
-      throw new UnauthorizedException("인증 토큰이 필요합니다");
-    }
-
-    try {
-      const payload = await this.jwtService.verifyAsync<UserPayload>(token, {
-        secret: this.configService.get<string>("JWT_SECRET"),
-      });
-
-      // 요청 객체에 사용자 정보 추가
-      request.user = {
-        id: payload.sub,
-        username: payload.username,
-        email: payload.email,
-        roles: payload.roles,
-      };
-    } catch (error) {
-      throw new UnauthorizedException("유효하지 않은 토큰입니다");
-    }
-
-    return true;
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private reflector: Reflector) {
+    super();
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(" ") ?? [];
-    return type === "Bearer" ? token : undefined;
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
+
+    if (isPublic) {
+      return true; // Public 데코레이터가 있으면 Guard를 통과
+    }
+
+    return super.canActivate(context); // 기본 AuthGuard 로직 실행
   }
 }
