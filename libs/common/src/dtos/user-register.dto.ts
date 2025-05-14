@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { USER_ROLES } from '../auth/auth.constants';
 
 export class UserRegisterDto {
   @ApiProperty({
@@ -34,4 +35,13 @@ export class UserRegisterDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({
+    name: 'role',
+    type: 'array',
+    description: '역할',
+    example: ['admin', 'user'],
+  })
+  @IsArray()
+  role: USER_ROLES[];
 }
