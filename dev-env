@@ -1,0 +1,31 @@
+# 개발 환경 변수 파일
+APP_NAME=event-platform
+APP_ENV=dev
+APP_VERSION=1.0.0
+
+# API Gateway
+API_GATEWAY_PORT=3000
+
+# Auth Microservice
+AUTH_SERVICE_HOST=localhost
+AUTH_SERVICE_PORT=3001
+
+# Event Microservice
+EVENT_SERVICE_HOST=localhost
+EVENT_SERVICE_PORT=3002
+
+# JWT 설정
+JWT_SECRET=maplestory_secret_key_for_development
+ACCESS_TOKEN_EXPIRATION=1h
+REFRESH_TOKEN_EXPIRATION=7d
+
+# MongoDB
+MONGO_URI=mongodb://localhost:27017/event-platform
+
+# 서비스 URL (로컬 개발용)
+AUTH_SERVICE_URL=http://localhost:3001/v1
+EVENT_SERVICE_URL=http://localhost:3002/v1
+
+# 서비스 URL (도커 컴포즈용)
+# AUTH_SERVICE_URL=http://auth-server:3001/v1
+# EVENT_SERVICE_URL=http://event-server:3002/v1 
