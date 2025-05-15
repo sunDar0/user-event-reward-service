@@ -1,24 +1,14 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { Observable } from "rxjs";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-  canActivate(
-    context: ExecutionContext
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     // 메타데이터에서 필요한 역할 가져오기
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>("roles", [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [context.getHandler(), context.getClass()]);
 
     // 역할 요구사항이 없으면 접근 허용
     if (!requiredRoles) {
@@ -29,14 +19,14 @@ export class RolesGuard implements CanActivate {
 
     // 사용자 객체가 없으면(인증되지 않은 사용자) 접근 거부
     if (!user) {
-      throw new ForbiddenException("인증이 필요합니다");
+      throw new ForbiddenException('인증이 필요합니다');
     }
 
     // 사용자 역할 중 하나라도 필요한 역할과 일치하면 접근 허용
     const hasRole = user.roles?.some((role) => requiredRoles.includes(role));
 
     if (!hasRole) {
-      throw new ForbiddenException("접근 권한이 없습니다");
+      throw new ForbiddenException('접근 권한이 없습니다');
     }
 
     return true;
