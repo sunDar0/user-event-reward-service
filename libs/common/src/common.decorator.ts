@@ -1,9 +1,9 @@
+import { UserAuthDto } from '@app/common/interfaces';
 import { applyDecorators, createParamDecorator, ExecutionContext, SetMetadata, Type } from '@nestjs/common';
 import { ApiBody, ApiExtraModels, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { SwaggerDocInterface } from 'apps/api-gateway/src/swagger/swagger.interface';
 import { plainToInstance } from 'class-transformer';
 import { isUndefined } from 'lodash';
-import { SwaggerDocInterface } from './interfaces/swagger.interface';
-import { UserAuthDto } from './interfaces/user.interface';
 export const ResponseDtoType = <T extends Type<unknown>>(t: T) =>
   applyDecorators(
     ApiExtraModels(t),
@@ -20,7 +20,9 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 export const GenerateSwaggerApiDoc = (swaggerDocInterface: SwaggerDocInterface) => {
   const methodDecorators: MethodDecorator[] = [];
-  const { summary, description, responseType, tags = [], query = [], param = [], body } = swaggerDocInterface;
+  const { summary, description, responseType, tags = [], query = [], param = [], body, isPublic = false } = swaggerDocInterface;
+
+  if (isPublic) methodDecorators.push(Public());
 
   const queryOptions = Array.isArray(query) ? query : [query];
   queryOptions.forEach((q) => methodDecorators.push(ApiQuery(q)));
