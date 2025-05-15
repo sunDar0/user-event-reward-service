@@ -1,10 +1,13 @@
-import { AUTH_EVENT_TYPE, GenerateSwaggerApiDoc, Roles } from '@app/common';
-import { UserRegisterDto } from '@app/common/dtos';
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req } from '@nestjs/common';
+import { AUTH_EVENT_TYPE, GenerateSwaggerApiDoc, JwtAuthGuard, Roles, RolesGuard } from '@app/common';
+import { UserLoginDto, UserRegisterDto } from '@app/common/dtos';
+import { AllExceptionsFilter, UnauthorizedExceptionFilter } from '@app/common/exception-filters';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiGatewayService } from './api-gateway.service';
 
 @Controller({ path: 'api', version: '1' })
+@UseFilters(AllExceptionsFilter, UnauthorizedExceptionFilter)
+@UseGuards(RolesGuard, JwtAuthGuard)
 export class ApiGatewayController {
   constructor(private readonly apiGatewayService: ApiGatewayService) {}
 
@@ -13,12 +16,12 @@ export class ApiGatewayController {
   @GenerateSwaggerApiDoc({
     tags: ['Auth'],
     summary: '유저 등록',
-    description: '회원가입을 위한 API입니다.',
+    description: '유저 등록을 위한 API입니다.',
     isPublic: true,
     body: { type: UserRegisterDto },
   })
   async register(@Body() userRegisterDto: UserRegisterDto) {
-    return this.apiGatewayService.registUser(AUTH_EVENT_TYPE.REGISTER, userRegisterDto);
+    return this.apiGatewayService.registerUser(AUTH_EVENT_TYPE.REGISTER, userRegisterDto);
   }
 
   @Post('auth/login')
@@ -27,8 +30,9 @@ export class ApiGatewayController {
     summary: '로그인',
     description: '로그인을 위한 API입니다.',
     isPublic: true,
+    body: { type: UserLoginDto },
   })
-  async login(@Body() loginDto: any) {
+  async login(@Body() loginDto: UserLoginDto) {
     return this.apiGatewayService.login(AUTH_EVENT_TYPE.LOGIN, loginDto);
   }
 
