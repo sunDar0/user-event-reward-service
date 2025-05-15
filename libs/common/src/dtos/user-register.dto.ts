@@ -37,11 +37,11 @@ export class UserRegisterDto {
   name: string;
 
   @ApiProperty({
-    name: 'role',
+    name: 'roles',
     type: 'array',
     description: '역할',
-    example: ['admin', 'user'],
+    example: [USER_ROLES.USER, USER_ROLES.OPERATOR],
   })
   @IsArray()
-  role: USER_ROLES[];
+  roles: USER_ROLES[];
 }
