@@ -1,7 +1,6 @@
-import { CommonModule, JwtAuthGuard, RolesGuard } from '@app/common';
+import { CommonModule } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ApiGatewayController } from './api-gateway.controller';
 import { ApiGatewayService } from './api-gateway.service';
@@ -41,16 +40,6 @@ import { validateApiGateWayEnv } from './helper/validate.helper';
     ]),
   ],
   controllers: [ApiGatewayController],
-  providers: [
-    ApiGatewayService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
+  providers: [ApiGatewayService],
 })
 export class ApiGatewayModule {}
