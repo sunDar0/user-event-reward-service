@@ -1,7 +1,7 @@
-import swagger from '@app/common/swagger';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import swagger from 'apps/api-gateway/src/swagger/swagger';
 import { ApiGatewayModule } from './api-gateway.module';
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
