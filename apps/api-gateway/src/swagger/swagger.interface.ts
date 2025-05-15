@@ -9,4 +9,5 @@ export interface SwaggerDocInterface {
   query?: ApiQueryOptions | ApiQueryOptions[];
   param?: ApiParamOptions | ApiParamOptions[];
   body?: ApiBodyOptions;
+  isPublic?: boolean;
 }
