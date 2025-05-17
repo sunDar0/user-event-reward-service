@@ -1,3 +1,4 @@
+TZ=Asia/Seoul
 # 개발 환경 변수 파일
 APP_NAME=event-platform
 APP_ENV=dev
