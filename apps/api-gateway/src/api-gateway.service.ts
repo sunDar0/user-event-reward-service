@@ -101,8 +101,8 @@ export class ApiGatewayService implements OnModuleInit {
    * @param {string} id 이벤트 ID
    * @returns {Observable<EventResponseDto>}
    */
-  getEventById(pattern: string, id: string): Observable<EventResponseDto> {
-    return this.forwardToService<EventResponseDto, { id: string }>('EVENT', pattern, { id });
+  getEventById(pattern: string, eventId: string): Observable<EventResponseDto> {
+    return this.forwardToService<EventResponseDto, string>('EVENT', pattern, eventId);
   }
 
   /** Reward 서비스 */
@@ -115,14 +115,14 @@ export class ApiGatewayService implements OnModuleInit {
    * @returns 보상 응답
    */
   createReward(pattern: string, eventId: string, createRewardDto: CreateRewardDto) {
-    return this.forwardToService<RewardResponseDto, { eventId: string } & CreateRewardDto>('EVENT', pattern, {
+    return this.forwardToService<RewardResponseDto, { eventId: string; createRewardDto: CreateRewardDto }>('EVENT', pattern, {
       eventId,
-      ...createRewardDto,
+      createRewardDto,
     });
   }
 
   getRewardsByEventId(pattern: string, eventId: string) {
-    return this.forwardToService<RewardResponseDto[], { eventId: string }>('EVENT', pattern, { eventId });
+    return this.forwardToService<RewardResponseDto[], string>('EVENT', pattern, eventId);
   }
 
   /** private method */
