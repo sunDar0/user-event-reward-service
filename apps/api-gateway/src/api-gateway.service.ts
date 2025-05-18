@@ -1,5 +1,5 @@
 import { UserLoginDto } from '@app/common';
-import { UserRegisterDto } from '@app/common/dtos/user-register.dto';
+import { RegisterUserDto } from '@app/common/dtos';
 import { Inject, Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
@@ -46,13 +46,16 @@ export class ApiGatewayService implements OnModuleInit {
   }
 
   // Auth 서비스로 요청 전달
-  registerUser(pattern: string, data: UserRegisterDto) {
-    return this.forwardToService<any, UserRegisterDto>('AUTH', pattern, data);
+  registerUser(pattern: string, RegisterUserDto: RegisterUserDto) {
+    return this.forwardToService<never, RegisterUserDto>('AUTH', pattern, RegisterUserDto);
   }
 
-  login(pattern: string, data: UserLoginDto) {
-    console.debug(data);
-    return this.forwardToService<string, UserLoginDto>('AUTH', pattern, data);
+  login(pattern: string, userLoginDto: UserLoginDto) {
+    return this.forwardToService<{ accessToken: string; refreshToken: string }, UserLoginDto>('AUTH', pattern, userLoginDto);
+  }
+
+  refreshAccessToken(pattern: string, refreshToken: string) {
+    return this.forwardToService<string, string>('AUTH', pattern, refreshToken);
   }
 
   /** private method */
