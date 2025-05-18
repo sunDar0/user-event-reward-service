@@ -20,7 +20,8 @@ export function validateAuthServiceEnv(): Joi.ObjectSchema<AuthServiceEnvConfig>
     APP_NAME: Joi.string().required(),
     APP_VERSION: Joi.string().required(),
     AUTH_SERVICE_PORT: Joi.number().required(),
-    JWT_SECRET: Joi.string().required(),
+    JWT_ACCESS_SECRET: Joi.string().required(),
+    JWT_REFRESH_SECRET: Joi.string().required(),
     ACCESS_TOKEN_EXPIRATION: Joi.string().required(),
     REFRESH_TOKEN_EXPIRATION: Joi.string().required(),
   });
