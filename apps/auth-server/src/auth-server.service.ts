@@ -15,9 +15,9 @@ export class AuthServerService {
   ) {}
 
   /**
-   * 사용자 등록을 처리합니다.
-   * @param {registerDto} 사용자 등록 정보
-   * @returns 등록된 사용자 정보
+   * 사용자 등록을 처리.
+   * @param {registerDto} registerDto 사용자 등록 정보
+   * @returns {Promise<UserInfoDto>} 등록된 사용자 정보
    */
   async register(registerDto: RegisterUserDto): Promise<UserInfoDto> {
     registerDto.password = await bcrypt.hash(registerDto.password, 10);
@@ -25,6 +25,11 @@ export class AuthServerService {
     return this.parser.parseUserData(user);
   }
 
+  /**
+   * 리프레시 토큰을 이용한 토큰 갱신
+   * @param {string} refreshToken 리프레시 토큰
+   * @returns 새로운 액세스 토큰과 리프레시 토큰
+   */
   async refreshToken(refreshToken: string) {
     try {
       const { _id, name }: UserPayload = await this.jwtService.verifyRefreshToken(refreshToken);
@@ -33,7 +38,7 @@ export class AuthServerService {
       if (!user) {
         throw new UnauthorizedException('잘못된 토큰이거나, 이미 만료된 토큰입니다.');
       }
-      console.log('user', user);
+
       const payload = {
         _id: user._id.toString(),
         name: user.name,
@@ -91,8 +96,20 @@ export class AuthServerService {
     return { accessToken, refreshToken };
   }
 
-  async updateUserRoles(userId: string, rolesDto: UpdateUserRolesDto) {
+  /**
+   * 사용자 권한 수정
+   * @param {string} userId 사용자 ID
+   * @param {UpdateUserRolesDto} rolesDto 권한 수정 정보
+   * @returns {Promise<UserInfoDto>} 수정된 사용자 정보
+   */
+  async updateUserRoles(userId: string, rolesDto: UpdateUserRolesDto): Promise<UserInfoDto> {
     const user = await this.userService.getUserById(userId);
+    if (!user) {
+      throw new RpcException({
+        message: '사용자를 찾을 수 없습니다.',
+        status: HttpStatus.NOT_FOUND,
+      });
+    }
     user.roles = rolesDto.roles;
     await this.userService.updateUser(user);
     return this.parser.parseUserData(user);
