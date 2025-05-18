@@ -14,7 +14,8 @@ export interface ApiGatewayEnvConfig extends EnvConfig {
 
 export interface AuthServiceEnvConfig extends EnvConfig {
   AUTH_SERVICE_PORT: number;
-  JWT_SECRET: string;
+  JWT_ACCESS_SECRET: string;
+  JWT_REFRESH_SECRET: string;
   ACCESS_TOKEN_EXPIRATION: string;
   REFRESH_TOKEN_EXPIRATION: string;
 }
