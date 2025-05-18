@@ -10,7 +10,6 @@ import { AuthServerService } from './auth-server.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: 'dev-env',
       validationSchema: validateAuthServiceEnv(),
     }),
     MongooseModule.forRootAsync({
