@@ -6,6 +6,9 @@ export * from './common.constants';
 export * from './common.decorator';
 export * from './common.module';
 export * from './dtos';
+
+export * from './events';
 export * from './exception-filters';
 export * from './interfaces';
+export * from './reward';
 export * from './user';
