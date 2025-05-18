@@ -1,8 +1,8 @@
-import { UserLoginDto } from '@app/common';
-import { RegisterUserDto, UpdateUserRolesDto, UserInfoDto } from '@app/common/dtos';
+import { CreateEventDto, EventResponseDto, RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common';
+import { CreateRewardDto, RewardResponseDto } from '@app/common/dtos/reward.dto';
 import { Inject, Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { catchError } from 'rxjs';
+import { catchError, Observable } from 'rxjs';
 
 export type ServiceType = 'AUTH' | 'EVENT';
 
@@ -32,38 +32,100 @@ export class ApiGatewayService implements OnModuleInit {
     }
   }
 
-  private async connectService(serviceType: ServiceType, client: ClientProxy) {
-    try {
-      // connect()는 Promise를 반환하므로 직접 await 사용
-      await client.connect();
-      this.serviceConnections.set(serviceType, true);
-      this.logger.log(`${serviceType} 서비스 연결 성공`);
-    } catch (error) {
-      this.serviceConnections.set(serviceType, false);
-      this.logger.error(`${serviceType} 서비스 연결 실패:`, error);
-      throw error;
-    }
-  }
-
-  // Auth 서비스로 요청 전달
-  registerUser(pattern: string, RegisterUserDto: RegisterUserDto) {
+  /**
+   * 유저 등록
+   * @param {string} pattern 패턴
+   * @param {RegisterUserDto} RegisterUserDto 유저 등록 정보
+   * @returns {Observable<UserInfoDto>}
+   */
+  registerUser(pattern: string, RegisterUserDto: RegisterUserDto): Observable<UserInfoDto> {
     return this.forwardToService<UserInfoDto, RegisterUserDto>('AUTH', pattern, RegisterUserDto);
   }
 
-  login(pattern: string, userLoginDto: UserLoginDto) {
+  /**
+   * 로그인
+   * @param {string} pattern 패턴
+   * @param {UserLoginDto} userLoginDto 로그인 정보
+   * @returns {Observable<{ accessToken: string; refreshToken: string }>}
+   */
+  login(pattern: string, userLoginDto: UserLoginDto): Observable<{ accessToken: string; refreshToken: string }> {
     return this.forwardToService<{ accessToken: string; refreshToken: string }, UserLoginDto>('AUTH', pattern, userLoginDto);
   }
 
-  refreshAccessToken(pattern: string, refreshToken: string) {
-    return this.forwardToService<string, string>('AUTH', pattern, refreshToken);
+  /**
+   * 토큰 갱신
+   * @param {string} pattern 패턴
+   * @param {string} refreshToken 리프레시 토큰
+   * @returns {Observable<{ newAccessToken: string; newRefreshToken: string }>}
+   */
+  refreshAccessToken(pattern: string, refreshToken: string): Observable<{ newAccessToken: string; newRefreshToken: string }> {
+    return this.forwardToService<{ newAccessToken: string; newRefreshToken: string }, string>('AUTH', pattern, refreshToken);
   }
 
-  updateUserRoles(pattern: string, userId: string, rolesDto: UpdateUserRolesDto) {
+  /**
+   * 사용자 권한 수정
+   * @param {string} pattern 패턴
+   * @param {string} userId 사용자 ID
+   * @param {UpdateUserRolesDto} rolesDto 권한 수정 정보
+   * @returns {Observable<UserInfoDto>}
+   */
+  updateUserRoles(pattern: string, userId: string, rolesDto: UpdateUserRolesDto): Observable<UserInfoDto> {
     return this.forwardToService<UserInfoDto, { userId: string; rolesDto: UpdateUserRolesDto }>('AUTH', pattern, { userId, rolesDto });
   }
 
-  /** private method */
+  /** Event 서비스 */
 
+  /**
+   * 이벤트 생성
+   * @param {string} pattern 패턴
+   * @param {CreateEventDto} eventDto 이벤트 생성 정보
+   * @param {string} createdBy 생성자 ID
+   * @returns {Observable<EventResponseDto>} 이벤트 응답
+   */
+  createEvent(pattern: string, eventDto: CreateEventDto, createdBy: string): Observable<EventResponseDto> {
+    return this.forwardToService<EventResponseDto, { eventDto: CreateEventDto; createdBy: string }>('EVENT', pattern, { eventDto, createdBy });
+  }
+
+  /**
+   * 이벤트 목록 조회
+   * @param {string} pattern 패턴
+   * @returns {Observable<EventResponseDto[]>}
+   */
+  getAllEvents(pattern: string): Observable<EventResponseDto[]> {
+    return this.forwardToService<EventResponseDto[], Record<string, never>>('EVENT', pattern, {});
+  }
+
+  /**
+   * 이벤트 상세 조회
+   * @param {string} pattern 패턴
+   * @param {string} id 이벤트 ID
+   * @returns {Observable<EventResponseDto>}
+   */
+  getEventById(pattern: string, id: string): Observable<EventResponseDto> {
+    return this.forwardToService<EventResponseDto, { id: string }>('EVENT', pattern, { id });
+  }
+
+  /** Reward 서비스 */
+
+  /**
+   * 이벤트 보상 등록
+   * @param pattern 패턴
+   * @param eventId 이벤트 ID
+   * @param createRewardDto 보상 생성 정보
+   * @returns 보상 응답
+   */
+  createReward(pattern: string, eventId: string, createRewardDto: CreateRewardDto) {
+    return this.forwardToService<RewardResponseDto, { eventId: string } & CreateRewardDto>('EVENT', pattern, {
+      eventId,
+      ...createRewardDto,
+    });
+  }
+
+  getRewardsByEventId(pattern: string, eventId: string) {
+    return this.forwardToService<RewardResponseDto[], { eventId: string }>('EVENT', pattern, { eventId });
+  }
+
+  /** private method */
   /**
    * 서비스로 요청 전달
    * @param serviceType 서비스 타입
@@ -71,7 +133,7 @@ export class ApiGatewayService implements OnModuleInit {
    * @param data 요청 데이터
    * @returns 서비스 응답
    */
-  private forwardToService<R, T>(serviceType: ServiceType, pattern: string, data: T) {
+  private forwardToService<R, T = void>(serviceType: ServiceType, pattern: string, data?: T) {
     // 서비스 연결 상태 확인
     if (!this.serviceConnections.get(serviceType)) {
       throw {
@@ -84,9 +146,23 @@ export class ApiGatewayService implements OnModuleInit {
     // 서비스 타입에 따른 클라이언트 선택
     const client = serviceType === 'AUTH' ? this.authClient : this.eventClient;
 
+    // 디버깅용 로그 추가
+    this.logger.debug(`Sending request to ${serviceType} service:`, {
+      pattern,
+      data,
+      messagePattern: { cmd: pattern },
+    });
+
     // 서비스 요청 전달
-    return client.send<R, T>({ cmd: pattern }, data).pipe(
+    return client.send<R, T | undefined>({ cmd: pattern }, data).pipe(
       catchError((error) => {
+        // 디버깅용 로그 추가
+        this.logger.error(`Error in ${serviceType} service communication:`, {
+          error,
+          pattern,
+          data,
+        });
+
         // 연결 오류 발생 시 연결 상태 업데이트
         if (error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET') {
           this.serviceConnections.set(serviceType, false);
@@ -118,5 +194,23 @@ export class ApiGatewayService implements OnModuleInit {
     };
 
     throw errorResponse;
+  }
+
+  /**
+   * 서비스 연결
+   * @param serviceType 서비스 타입
+   * @param client 클라이언트
+   */
+  private async connectService(serviceType: ServiceType, client: ClientProxy) {
+    try {
+      // connect()는 Promise를 반환하므로 직접 await 사용
+      await client.connect();
+      this.serviceConnections.set(serviceType, true);
+      this.logger.log(`${serviceType} 서비스 연결 성공`);
+    } catch (error) {
+      this.serviceConnections.set(serviceType, false);
+      this.logger.error(`${serviceType} 서비스 연결 실패:`, error);
+      throw error;
+    }
   }
 }
