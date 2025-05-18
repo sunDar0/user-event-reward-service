@@ -1,26 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRewardDto, RewardResponseDto, UpdateRewardDto } from '../dtos/reward.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CreateRewardDto, RewardResponseDto } from '../dtos/reward.dto';
+import { Reward, RewardDocument } from './reward.schema';
 
 @Injectable()
 export class RewardService {
-  async createReward(eventId: string, createRewardDto: CreateRewardDto): Promise<RewardResponseDto> {
-    // TODO: Implement reward creation logic
-    throw new Error('Method not implemented.');
+  constructor(@InjectModel(Reward.name) private rewardModel: Model<RewardDocument>) {}
+
+  async createReward(eventId: string, createRewardDto: CreateRewardDto) {
+    const reward = new this.rewardModel({ ...createRewardDto, eventId, remainingQuantity: createRewardDto.quantity });
+    return this.toResponseDto(await reward.save());
   }
 
-  async getRewardsByEventId(eventId: string): Promise<RewardResponseDto[]> {
-    // TODO: Implement get rewards by event ID logic
-    throw new Error('Method not implemented.');
-  }
-
-  async updateReward(eventId: string, rewardId: string, updateRewardDto: UpdateRewardDto): Promise<RewardResponseDto> {
-    // TODO: Implement reward update logic
-    throw new Error('Method not implemented.');
-  }
-
-  async deleteReward(eventId: string, rewardId: string): Promise<void> {
-    // TODO: Implement reward deletion logic
-    throw new Error('Method not implemented.');
+  async getRewardsByEventId(eventId: string) {
+    const rewards = await this.rewardModel.find({ eventId }).exec();
+    return rewards.map(this.toResponseDto);
   }
 
   async validateRewardQuantity(rewardId: string): Promise<boolean> {
@@ -31,5 +26,19 @@ export class RewardService {
   async decreaseRewardQuantity(rewardId: string): Promise<void> {
     // TODO: Implement decrease reward quantity logic
     throw new Error('Method not implemented.');
+  }
+
+  private toResponseDto(reward: RewardDocument): RewardResponseDto {
+    return {
+      _id: reward._id.toString(),
+      eventId: reward.eventId,
+      type: reward.type,
+      name: reward.name,
+      details: reward.details,
+      quantity: reward.quantity,
+      remainingQuantity: reward.remainingQuantity,
+      createdAt: reward.createdAt,
+      updatedAt: reward.updatedAt,
+    };
   }
 }
