@@ -1,9 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { REWARD_REQUEST_STATUS } from './reward.constants';
 
-@Schema({ timestamps: true })
-export class RewardRequest extends Document {
+// 6.0 이상 버전부터 추가(Document 대신 HydratedDocument 사용) - 타입 안정성
+export type RewardRequestDocument = HydratedDocument<RewardRequest>;
+
+@Schema({ timestamps: true, collection: 'reward-requests' })
+export class RewardRequest {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   userId: string;
 
