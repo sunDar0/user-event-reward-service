@@ -1,5 +1,5 @@
 import { AUTH_EVENT_TYPE, GenerateSwaggerApiDoc, JwtAuthGuard, Roles, RolesGuard, UserAuth, UserAuthDto } from '@app/common';
-import { RegisterUserDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
+import { RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
 import { AllExceptionsFilter, UnauthorizedExceptionFilter } from '@app/common/exception-filters';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Req, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -10,7 +10,7 @@ import { response } from './helper/response.helper';
 @ApiBearerAuth('jwt')
 @Controller({ path: 'api', version: '1' })
 @UseFilters(AllExceptionsFilter, UnauthorizedExceptionFilter)
-@UseGuards(RolesGuard, JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ApiGatewayController {
   constructor(private readonly apiGatewayService: ApiGatewayService) {}
 
@@ -64,12 +64,10 @@ export class ApiGatewayController {
     summary: '사용자 권한 수정',
     description: '사용자의 권한을 수정합니다.',
     param: { type: 'string', name: 'userId', description: '권한을 수정할 대상자의 식별자' },
+    body: { type: UpdateUserRolesDto },
   })
-  async updateUserRoles(@Param('userId') userId: string, @Body() rolesDto: any) {
-    // return this.apiGatewayService.forwardToAuthService('updateUserRoles', {
-    //   userId,
-    //   ...rolesDto,
-    // });
+  async updateUserRoles(@Param('userId') userId: string, @Body() rolesDto: UpdateUserRolesDto) {
+    return this.apiGatewayService.updateUserRoles(AUTH_EVENT_TYPE.UPDATE_ROLES, userId, rolesDto);
   }
 
   // Event 서비스 라우팅
