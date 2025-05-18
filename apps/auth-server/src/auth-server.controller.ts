@@ -1,6 +1,6 @@
 import { AUTH_EVENT_TYPE } from '@app/common';
 import { RegisterUserDto } from '@app/common/dtos';
-import { UserLoginDto } from '@app/common/dtos/user.dto';
+import { UpdateUserRolesDto, UserLoginDto } from '@app/common/dtos/user.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthServerService } from './auth-server.service';
@@ -25,7 +25,7 @@ export class AuthServerController {
   }
 
   @MessagePattern({ cmd: AUTH_EVENT_TYPE.UPDATE_ROLES })
-  async updateProfile(@Payload() data: { refreshToken: string }) {
-    // return this.authServerService.refreshToken(data.refreshToken);
+  async updateUserRoles(@Payload() data: { userId: string; rolesDto: UpdateUserRolesDto }) {
+    return this.authServerService.updateUserRoles(data.userId, data.rolesDto);
   }
 }
