@@ -1,25 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { UserAuthDto, UserPayload } from '../interfaces';
+import { UserDocument, UserService } from '../user';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userService: UserService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'),
+      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET'),
     });
   }
 
-  async validate(payload: any) {
-    // 토큰의 payload에서 사용자 정보를 추출하여 반환
+  async validate(payload: UserPayload) {
+    // UserService를 사용하여 사용자 조회
+    const user: UserDocument = await this.userService.getUserById(payload._id);
+
+    if (!user) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    }
+    // 사용자 정보를 반환
     return {
-      id: payload.id,
-      email: payload.email,
-      name: payload.name,
-      roles: payload.roles,
-    };
+      _id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      roles: user.roles,
+    } satisfies UserAuthDto;
   }
 }
