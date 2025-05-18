@@ -8,11 +8,13 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // 마이크로서비스 설정
-  const microservice = app.connectMicroservice<MicroserviceOptions>({
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
       host: configService.get<string>('EVENT_SERVICE_HOST'),
       port: configService.get<number>('EVENT_SERVICE_PORT'),
+      retryAttempts: 5,
+      retryDelay: 3000,
     },
   });
 
