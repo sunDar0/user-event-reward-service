@@ -1,7 +1,6 @@
 import { AUTH_EVENT_TYPE, GenerateSwaggerApiDoc, JwtAuthGuard, Roles, RolesGuard, UserAuth, UserAuthDto } from '@app/common';
-import { RegisterUserDto, UserLoginDto } from '@app/common/dtos';
+import { RegisterUserDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
 import { AllExceptionsFilter, UnauthorizedExceptionFilter } from '@app/common/exception-filters';
-import { UserDocument } from '@app/common/user';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Req, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { map } from 'rxjs';
@@ -23,11 +22,12 @@ export class ApiGatewayController {
     description: '유저 등록을 진행합니다.',
     isPublic: true,
     body: { type: RegisterUserDto },
+    responseType: UserInfoDto,
   })
   register(@Body() RegisterUserDto: RegisterUserDto) {
     return this.apiGatewayService
       .registerUser(AUTH_EVENT_TYPE.REGISTER, RegisterUserDto)
-      .pipe(map((user: UserDocument) => response({ user }, '유저등록이 완료되었습니다.', HttpStatus.CREATED)));
+      .pipe(map((user: UserInfoDto) => response({ user }, '유저등록이 완료되었습니다.', HttpStatus.CREATED)));
   }
 
   @Post('auth/login')
