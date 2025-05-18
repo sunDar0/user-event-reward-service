@@ -4,13 +4,24 @@ import { ApiBody, ApiExtraModels, ApiOkResponse, ApiOperation, ApiParam, ApiQuer
 import { SwaggerDocInterface } from 'apps/api-gateway/src/swagger/swagger.interface';
 import { plainToInstance } from 'class-transformer';
 import { isUndefined } from 'lodash';
+import { BaseResponseDto } from './dtos';
+
 export const ResponseDtoType = <T extends Type<unknown>>(t: T) =>
   applyDecorators(
-    ApiExtraModels(t),
+    ApiExtraModels(BaseResponseDto, t),
     ApiOkResponse({
       schema: {
-        title: `${t.name}Type`,
-        allOf: [{ $ref: getSchemaPath(t) }],
+        title: `Response${t.name}Type`,
+        allOf: [
+          { $ref: getSchemaPath(BaseResponseDto) },
+          {
+            properties: {
+              data: {
+                items: { $ref: getSchemaPath(t) },
+              },
+            },
+          },
+        ],
       },
     }),
   );
@@ -38,7 +49,7 @@ export const GenerateSwaggerApiDoc = (swaggerDocInterface: SwaggerDocInterface) 
   return applyDecorators(ApiOperation({ summary, description }), ...methodDecorators);
 };
 
-export const UserAuth = createParamDecorator((ctx: ExecutionContext): UserAuthDto => {
+export const UserAuth = createParamDecorator((data: unknown, ctx: ExecutionContext): UserAuthDto => {
   const request = ctx.switchToHttp().getRequest();
   //인증된 유저 타입과 요청하는 api의 유저타입이 불일치 할경우 badRequestException 발생
   return plainToInstance(UserAuthDto, request.user);
