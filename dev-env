@@ -16,7 +16,8 @@ EVENT_SERVICE_HOST=localhost
 EVENT_SERVICE_PORT=3002
 
 # JWT 설정
-JWT_SECRET=maplestory_secret_key_for_development
+JWT_ACCESS_SECRET="maplestory_secret_key_!@#A()@*#"
+JWT_REFRESH_SECRET="maplestory_secret_key_refresh_!@#A()@*#"
 ACCESS_TOKEN_EXPIRATION=1h
 REFRESH_TOKEN_EXPIRATION=7d
 
