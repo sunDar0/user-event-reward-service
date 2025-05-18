@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
+import { Event } from '../events/event.schema';
 import { REWARD_TYPE } from './reward.constants';
 
+export type RewardDocument = HydratedDocument<Reward & { event?: Event }>;
 @Schema({ timestamps: true })
-export class Reward extends Document {
+export class Reward {
+  _id: Types.ObjectId;
+
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Event', required: true })
   eventId: string;
 
@@ -19,7 +23,7 @@ export class Reward extends Document {
   @Prop({ type: Number, required: true, min: -1 })
   quantity: number;
 
-  @Prop({ type: Number, required: true, min: 0 })
+  @Prop({ type: Number, required: true, min: -1 })
   remainingQuantity: number;
 
   @Prop({ type: Date, default: Date.now })
