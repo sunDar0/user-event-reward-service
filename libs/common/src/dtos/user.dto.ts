@@ -8,7 +8,7 @@ export class RegisterUserDto {
     name: 'email',
     type: 'string',
     description: '이메일',
-    example: 'abc@def.com',
+    example: 'test@example.com',
     required: true,
   })
   @IsEmail()
@@ -67,14 +67,6 @@ export class UserLoginDto {
 }
 
 export class UpdateUserRolesDto {
-  @ApiProperty({
-    description: '사용자 ID',
-    example: '1234567890abcdef',
-  })
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
   @ApiProperty({
     description: '역할 목록',
     example: [USER_ROLES.USER, USER_ROLES.OPERATOR],

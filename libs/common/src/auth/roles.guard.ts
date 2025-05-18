@@ -16,7 +16,6 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest();
-
     // 사용자 객체가 없으면(인증되지 않은 사용자) 접근 거부
     if (!user) {
       throw new ForbiddenException('인증이 필요합니다');
