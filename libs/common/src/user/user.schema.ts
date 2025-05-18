@@ -19,8 +19,11 @@ export class User {
   @Prop({ type: [String], enum: USER_ROLES, default: [USER_ROLES.USER] })
   roles: USER_ROLES[];
 
-  @Prop()
+  @Prop({ type: Date, default: null })
   lastLoginAt: Date;
+
+  @Prop({ type: String, default: null })
+  refreshToken: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
