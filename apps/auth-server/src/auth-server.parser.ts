@@ -8,7 +8,7 @@ export class AuthServerParser {
    * @param {UserDocument} data
    * @returns {UserInfoDto}
    */
-  parseRegisterUserData(data: UserDocument): UserInfoDto {
+  parseUserData(data: UserDocument): UserInfoDto {
     return {
       userId: data._id.toString(),
       email: data.email,
