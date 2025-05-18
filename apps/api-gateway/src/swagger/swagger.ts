@@ -25,7 +25,12 @@ export default async function (app: INestApplication, configService: ConfigServi
   // 스웨거 라우트 연동
   SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
-      defaultModelsExpandDepth: -1,
+      defaultModelsExpandDepth: -1, // 모델 확장 깊이
+      persistAuthorization: true, // 인증 정보 유지
+      docExpansion: 'none', // 문서 확장 여부
+      filter: true, // 필터 표시 여부
+      showExtensions: true, // 확장 표시 여부
+      showCommonExtensions: true, // 공통 확장 표시 여부
     },
   });
 }
