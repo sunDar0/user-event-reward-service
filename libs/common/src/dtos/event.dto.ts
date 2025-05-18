@@ -3,6 +3,7 @@ import { IsDateString, IsEnum, IsNotEmpty, IsObject, IsString } from 'class-vali
 import { Types } from 'mongoose';
 import { EVENT_CONDITION_TYPE, EVENT_STATUS } from '../events/event.constants';
 import { EventCondition } from '../events/event.schema';
+import { RewardResponseDto } from './reward.dto';
 
 export class CreateEventDto {
   @ApiProperty({
@@ -75,6 +76,9 @@ export class EventResponseDto {
 
   @ApiProperty({ description: '생성자 ID' })
   createdBy: Types.ObjectId;
+
+  @ApiProperty({ description: '보상 목록', type: [RewardResponseDto], required: false })
+  rewards?: RewardResponseDto[];
 
   @ApiProperty({ description: '생성일' })
   createdAt: string;
