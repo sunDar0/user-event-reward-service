@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { CreateEventDto, EventResponseDto } from '../dtos';
 import { Event, EventDocument } from './event.schema';
 
@@ -16,14 +16,8 @@ export class EventService {
    * @param createdBy 생성자 ID
    * @returns 생성된 이벤트 정보
    */
-  async create(createEventDto: CreateEventDto, createdBy: string): Promise<EventResponseDto> {
+  async createEvent(createEventDto: CreateEventDto, createdBy: string): Promise<EventResponseDto> {
     try {
-      if (!Types.ObjectId.isValid(createdBy)) {
-        throw new RpcException({
-          message: '유효하지 않은 생성자 ID 형식입니다.',
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
       const created = new this.eventModel({ ...createEventDto, createdBy });
       const saved = await created.save();
       return this.toResponseDto(saved);
@@ -63,15 +57,21 @@ export class EventService {
    * @returns 이벤트 정보
    */
   async findById(id: string): Promise<EventResponseDto> {
-    console.log('id === ', id);
-    const event = await this.eventModel.findById(id).exec();
-    console.log('event === ', event);
+    const event = await this.eventModel
+      .findById(id)
+      .populate({
+        path: 'rewards',
+        select: 'type name details quantity remainingQuantity',
+      })
+      .exec();
+
     if (!event) {
       throw new RpcException({
         message: '이벤트를 찾을 수 없습니다.',
         status: HttpStatus.NOT_FOUND,
       });
     }
+
     return this.toResponseDto(event);
   }
 
@@ -85,6 +85,17 @@ export class EventService {
       status: event.status,
       conditions: event.conditions,
       createdBy: event.createdBy,
+      rewards: event.rewards?.map((reward) => ({
+        _id: reward._id.toString(),
+        eventId: reward.eventId.toString(),
+        type: reward.type,
+        name: reward.name,
+        details: reward.details,
+        quantity: reward.quantity,
+        remainingQuantity: reward.remainingQuantity,
+        createdAt: reward.createdAt,
+        updatedAt: reward.updatedAt,
+      })),
       createdAt: event.createdAt?.toISOString() ?? '',
       updatedAt: event.updatedAt?.toISOString() ?? '',
     };
