@@ -3,28 +3,30 @@ import { IsString } from 'class-validator';
 
 export class UserPayload {
   @ApiProperty({
-    name: 'id',
+    name: '_id',
     type: 'string',
-    description: '유저 ID',
+    description: 'MongoDB에서 생성된 유저 고유 ID',
   })
   @IsString()
-  id: string;
-
-  @ApiProperty({
-    name: 'email',
-    type: 'string',
-    description: '유저 이메일',
-  })
-  @IsString()
-  email: string;
+  _id: string;
 
   @ApiProperty({
     name: 'name',
     type: 'string',
-    description: '유저 이름',
+    description: '이름',
   })
   @IsString()
   name: string;
+}
+
+export class UserAuthDto extends UserPayload {
+  @ApiProperty({
+    name: 'email',
+    type: 'string',
+    description: '이메일',
+  })
+  @IsString()
+  email: string;
 
   @ApiProperty({
     name: 'roles',
@@ -34,5 +36,3 @@ export class UserPayload {
   @IsString()
   roles: string[];
 }
-
-export class UserAuthDto extends UserPayload {}
