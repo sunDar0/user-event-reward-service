@@ -1,5 +1,5 @@
 import { JwtService, UserDocument, UserPayload, UserService } from '@app/common';
-import { RegisterUserDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
+import { RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
 import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import * as bcrypt from 'bcrypt';
@@ -22,7 +22,7 @@ export class AuthServerService {
   async register(registerDto: RegisterUserDto): Promise<UserInfoDto> {
     registerDto.password = await bcrypt.hash(registerDto.password, 10);
     const user: UserDocument = await this.userService.createUser(registerDto);
-    return this.parser.parseRegisterUserData(user);
+    return this.parser.parseUserData(user);
   }
 
   async refreshToken(refreshToken: string) {
@@ -89,5 +89,12 @@ export class AuthServerService {
     await this.userService.updateUser(user);
 
     return { accessToken, refreshToken };
+  }
+
+  async updateUserRoles(userId: string, rolesDto: UpdateUserRolesDto) {
+    const user = await this.userService.getUserById(userId);
+    user.roles = rolesDto.roles;
+    await this.userService.updateUser(user);
+    return this.parser.parseUserData(user);
   }
 }
