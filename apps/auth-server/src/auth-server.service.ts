@@ -27,7 +27,7 @@ export class AuthServerService {
 
   async refreshToken(refreshToken: string) {
     try {
-      const { _id, name }: UserPayload = await this.jwtService.verifyToken(refreshToken);
+      const { _id, name }: UserPayload = await this.jwtService.verifyRefreshToken(refreshToken);
       // DB에 저장된 Refresh Token과 일치하는지, 유효한지 검증
       const user = await this.userService.getUserByRefreshToken(_id, name, refreshToken);
       if (!user) {
