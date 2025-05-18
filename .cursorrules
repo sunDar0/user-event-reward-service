@@ -26,7 +26,7 @@
     * 역할(Role) 관리.
     * JWT 발급 (Access Token, Refresh Token).
 * **Event Server:**
-    * 이벤트 생성, 조회, 수정, 삭제 (CRUD).
+    * 이벤트 생성, 조회(CRUD).
     * 이벤트에 따른 보상 정의 및 관리 (CRUD).
     * 사용자의 보상 요청 처리 (조건 검증 포함).
     * 보상 지급 상태 저장 및 지급 내역 관리.
@@ -51,7 +51,6 @@
         * `POST /auth/register`: 사용자 가입 (username, email, password). 비밀번호는 `bcrypt`로 해싱.
         * `POST /auth/login`: 로그인. 성공 시 JWT (Access Token: 짧은 만료, Refresh Token: 긴 만료) 반환.
         * `POST /auth/refresh`: Refresh Token으로 새로운 Access Token 재발급.
-        * `GET /users/me`: (인증된 사용자) 자신의 정보 조회.
         * (ADMIN 권한) 사용자 역할 관리 API (예: `PUT /users/:userId/roles`).
     * `JwtStrategy`를 사용하여 Access Token 검증 로직 구현.
 * **Event Server:**
