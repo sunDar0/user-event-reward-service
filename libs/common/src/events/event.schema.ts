@@ -2,9 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { HydratedDocument, Types } from 'mongoose';
 import { IEventCondition } from '../interfaces';
+import { Reward } from '../reward/reward.schema';
 import { EVENT_CONDITION_TYPE, EVENT_STATUS } from './event.constants';
 
-export type EventDocument = HydratedDocument<Event>;
+export type EventDocument = HydratedDocument<Event & { rewards?: Reward[] }>;
 
 export class EventCondition implements IEventCondition {
   @ApiProperty({
@@ -57,6 +58,15 @@ export class Event {
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
+
+// Add virtual field for rewards
+EventSchema.virtual('rewards', {
+  ref: 'Reward', // 참조할 모델
+  localField: '_id', // Event의 _id
+  foreignField: 'eventId', // Reward의 eventId
+  justOne: false, // 하나의 이벤트에 여러 보상 가능
+});
+
 // 복합 인덱스 생성
 EventSchema.index(
   {
