@@ -52,7 +52,6 @@ export class EventServerService {
   // 보상 요청 생성
   async createRewardRequest(userId: string, dto: CreateRewardRequestDto): Promise<RewardRequestResponseDto[]> {
     try {
-      console.log(1);
       // 이벤트 존재 확인 및 보상 목록 조회
       const event = await this.eventService.findById(dto.eventId);
       if (!event) {
@@ -61,16 +60,13 @@ export class EventServerService {
           status: HttpStatus.NOT_FOUND,
         });
       }
-      console.log(2);
       if (!event.rewards || event.rewards.length === 0) {
         throw new RpcException({
           message: '해당 이벤트에 등록된 보상이 없습니다.',
           status: HttpStatus.BAD_REQUEST,
         });
       }
-      console.log(3);
-      // 이벤트 조건 검증 (실제 구현에서는 이벤트 타입에 따라 검증 로직 구현 필요)
-      // 2. 이벤트 조건 검증 (이벤트 서버에서 이미 검증했다고 가정)
+      // 이벤트 조건 검증
       const isConditionMet = await this.eventService.checkEventCondition(dto.completedInfo, event);
       if (!isConditionMet) {
         throw new RpcException({
@@ -78,7 +74,7 @@ export class EventServerService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
-      console.log(4);
+
       // 이벤트와 보상 정보를 포함한 DTO 생성
       const requestWithEventDto: CreateRewardRequestWithEventDto = {
         eventId: dto.eventId,
