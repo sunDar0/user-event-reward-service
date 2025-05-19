@@ -9,6 +9,5 @@ export * from './dtos';
 
 export * from './events';
 export * from './exception-filters';
-export * from './interfaces';
 export * from './reward';
 export * from './user';
