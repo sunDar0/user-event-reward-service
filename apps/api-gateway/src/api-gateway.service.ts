@@ -1,7 +1,7 @@
 import { CreateEventDto, EventResponseDto, RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common';
 import { CreateRewardRequestDto, RewardRequestResponseDto } from '@app/common/dtos/reward-request.dto';
 import { CreateRewardDto, RewardResponseDto } from '@app/common/dtos/reward.dto';
-import { Inject, Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { catchError, map, Observable } from 'rxjs';
 import { ResponseLoginDto, ResponseRefreshTokenDto, ResponseUpdateUserRolesDto } from './dtos/response.auth.dto';
@@ -13,30 +13,13 @@ import { ResponseRegisterUserDto } from './dtos/response.user.dto';
 export type ServiceType = 'AUTH' | 'EVENT';
 
 @Injectable()
-export class ApiGatewayService implements OnModuleInit {
+export class ApiGatewayService {
   private readonly logger = new Logger(ApiGatewayService.name);
-  private serviceConnections: Map<ServiceType, boolean> = new Map();
 
   constructor(
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
     @Inject('EVENT_SERVICE') private readonly eventClient: ClientProxy,
-  ) {
-    // 초기 연결 상태 설정
-    this.serviceConnections.set('AUTH', false);
-    this.serviceConnections.set('EVENT', false);
-  }
-
-  async onModuleInit() {
-    try {
-      // Auth 서비스 연결 확인
-      await this.connectService('AUTH', this.authClient);
-      // Event 서비스 연결 확인
-      await this.connectService('EVENT', this.eventClient);
-    } catch (error) {
-      this.logger.error('서비스 초기 연결 실패:', error);
-      throw error;
-    }
-  }
+  ) {}
 
   /**
    * 유저 등록
@@ -201,15 +184,6 @@ export class ApiGatewayService implements OnModuleInit {
    * @returns 서비스 응답
    */
   private forwardToService<R, T = void>(serviceType: ServiceType, pattern: string, data?: T) {
-    // 서비스 연결 상태 확인
-    if (!this.serviceConnections.get(serviceType)) {
-      throw {
-        statusCode: 503,
-        message: `${serviceType} 서비스가 현재 사용 불가능합니다.`,
-        error: 'Service Unavailable',
-      };
-    }
-
     // 서비스 타입에 따른 클라이언트 선택
     const client = serviceType === 'AUTH' ? this.authClient : this.eventClient;
 
@@ -218,10 +192,6 @@ export class ApiGatewayService implements OnModuleInit {
       catchError((error) => {
         this.logger.error(`Error in ${serviceType} service communication:`, { error, pattern, data });
 
-        // 연결 오류 발생 시 연결 상태 업데이트
-        if (error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET') {
-          this.serviceConnections.set(serviceType, false);
-        }
         return this.handleServiceError(error, serviceType);
       }),
     );
@@ -249,23 +219,5 @@ export class ApiGatewayService implements OnModuleInit {
     };
 
     throw errorResponse;
-  }
-
-  /**
-   * 서비스 연결
-   * @param serviceType 서비스 타입
-   * @param client 클라이언트
-   */
-  private async connectService(serviceType: ServiceType, client: ClientProxy) {
-    try {
-      // connect()는 Promise를 반환하므로 직접 await 사용
-      await client.connect();
-      this.serviceConnections.set(serviceType, true);
-      this.logger.log(`${serviceType} 서비스 연결 성공`);
-    } catch (error) {
-      this.serviceConnections.set(serviceType, false);
-      this.logger.error(`${serviceType} 서비스 연결 실패:`, error);
-      throw error;
-    }
   }
 }
