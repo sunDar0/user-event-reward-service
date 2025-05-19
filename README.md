@@ -1,8 +1,32 @@
-# 메이플스토리 이벤트/보상 관리 플랫폼
+# 이벤트/보상 관리 플랫폼
+
+## 프로젝트 아키텍처 및 기술 선택 배경
+
+### 마이크로서비스 통신 방식
+기존 모노레포 구조에서 REST API 기반의 마이크로서비스 통신 대신, 이점이 있는 NestJS의 TCP 전송 계층과 MessagePattern을 활용한 구조를 채택했습니다.
+- 성능면에서 더 가볍고 연결 유지로 빠른 통신이 가능
+- 컴파일 시점에서 타입 체크 가능
+- 확장에 용이함
+
+### 공유 라이브러리 구조
+`libs` 디렉토리 아래에 공통 모듈(user, event, reward)을 분리하였습니다.
+- 코드 재사용성 향상
+- 새로운 마이크로서비스 추가 시 즉시 활용 가능
+- 일관된 비즈니스 로직 유지
+- 타입 정의 공유
+
+### 이벤트 조건 검증
+Strategy 패턴을 활용하여 이벤트 조건 검증 로직을 구현했습니다:
+- 각 조건 타입별 독립적인 검증 전략
+- 새로운 조건 타입 추가가 용이
+- 유지보수성 향상
+- 테스트 용이성
+
+> tcp 활용한 microService, mongodb 활용은 실무에서 경험해보지 못하여 어려웠지만 많은 공부가 되었습니다.
 
 ## 프로젝트 개요
 
-이 프로젝트는 메이플스토리 PC 웹 백엔드 엔지니어 과제로, 이벤트 조건 검증 자동화, 보상 지급, 그리고 역할 기반 접근 제어를 핵심 기능으로 제공합니다.
+이 프로젝트는 이벤트 조건 검증 자동화, 보상 지급, 그리고 역할 기반 접근 제어를 핵심 기능으로 제공합니다.
 
 ## 시스템 아키텍처
 
@@ -37,10 +61,9 @@
   - TypeScript
 - **Database**: 
   - MongoDB (Mongoose)
-  - MongoDB 트랜잭션 지원
 - **Authentication**: 
   - JWT (Access Token + Refresh Token)
-  - Passport.js
+  - Passport
 - **Validation**: 
   - class-validator
   - class-transformer
@@ -65,7 +88,7 @@
 
 1. 저장소 클론
 ```bash
-git clone [repository-url]
+git clone {repository_url}
 cd maplestory-msa
 ```
 
@@ -103,10 +126,16 @@ REFRESH_TOKEN_EXPIRATION=7d
 # MongoDB
 MONGO_URI=mongodb://dar:Asd1fgh2@localhost:27017/maplestory-msa?authSource=admin
 ```
-
-4. Docker Compose로 실행
+4.1 로컬 실행 (mongodb가 로컬상에 설치되어있을 경우)
 ```bash
-docker-compose up --build
+# api-gateway, auth-server, event-server 실행
+pn start:all
+
+```
+4.2 Docker Compose로 실행
+```bash
+# api-gateway, auth-server, event-server, mongodb 컨테이너 실행
+docker-compose up -d
 ```
 
 서비스가 다음 포트로 실행됩니다:
@@ -147,7 +176,7 @@ Swagger UI를 통해 API 문서를 확인할 수 있습니다:
 
 ### 지원하는 이벤트 조건 타입
 
-1. **로그인 스트릭 (LOGIN_STREAK)**
+1. **연속 로그인 (LOGIN_STREAK)**
    - 연속 로그인 일수 기반 보상
    - 예: 7일 연속 로그인 시 보상 지급
    - 조건 검증: `CompareData` 클래스의 `loginDates` 배열 활용
@@ -157,10 +186,18 @@ Swagger UI를 통해 API 문서를 확인할 수 있습니다:
    - 예: 특정 퀘스트 ID 클리어 시 보상 지급
    - 조건 검증: `CompareData` 클래스의 `completedQuests` 배열 활용
 
-3. **퀘스트 클리어 (MONSTER_KILL)**
+3. **몬스터 처치 (MONSTER_KILL)**
    - 특정 몬스터 n마리 처치 기반 보상
    - A 몬스터 10마리 처치 시 보상 지급
    - 조건 검증:  `CompareData` 클래스의 `killedMonsters` 객체 활용
+4. **구매 n회 완료**
+   - 아이템 구매나 캐시구매 n회 완료
+   - 아이템 10회 구매 완료
+   - 조건 검증:  `CompareData` 클래스의 `purchaseCount` 객체 활용
+5. **추천 n회 받기**
+   - 특정 몬스터 n마리 처치 기반 보상
+   - A 몬스터 10마리 처치 시 보상 지급
+   - 조건 검증:  `CompareData` 클래스의 `recommendCount` 객체 활용
 
 ### 조건 검증 프로세스
 1. 이벤트 기간 및 상태 확인
