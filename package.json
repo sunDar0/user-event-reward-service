@@ -8,7 +8,11 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "build:all": "npm run build -- --webpack",
+    "build:common": "nest build common",
+    "build:api-gateway": "nest build api-gateway",
+    "build:auth-server": "nest build auth-server",
+    "build:event-server": "nest build event-server",
+    "build:all": "pnpm run build:common && pnpm run build:api-gateway && pnpm run build:auth-server && pnpm run build:event-server",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -27,7 +31,10 @@
     "start:all:prod": "npm run build:all && npm-run-all --parallel start:prod:api-gateway start:prod:auth-server start:prod:event-server",
     "start:prod:api-gateway": "node dist/apps/api-gateway/main",
     "start:prod:auth-server": "node dist/apps/auth-server/main",
-    "start:prod:event-server": "node dist/apps/event-server/main"
+    "start:prod:event-server": "node dist/apps/event-server/main",
+    "setup:env": "chmod +x scripts/setup-env.sh && ./scripts/setup-env.sh",
+    "docker:dev": "pnpm run setup:env && docker-compose up -d",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up -d"
   },
   "dependencies": {
     "@nestjs/common": "^10.2.8",

@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE_NAME: api-gateway
+        PORT: 3000
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./dev-env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./dev-env:/app/apps/api-gateway/.env
+    command: node dist/apps/api-gateway/main
+    depends_on:
+      - auth-server
+      - event-server
+    networks:
+      - maplestory-network
+    restart: unless-stopped
+
+  auth-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE_NAME: auth-server
+        PORT: 3001
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./dev-env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./dev-env:/app/apps/auth-server/.env
+    command: node dist/apps/auth-server/main
+    depends_on:
+      - mongodb
+    networks:
+      - maplestory-network
+    restart: unless-stopped
+
+  event-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE_NAME: event-server
+        PORT: 3002
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./dev-env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./dev-env:/app/apps/event-server/.env
+    command: node dist/apps/event-server/main
+    depends_on:
+      - mongodb
+    networks:
+      - maplestory-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=dar
+      - MONGO_INITDB_ROOT_PASSWORD=Asd1fgh2
+      - MONGO_INITDB_DATABASE=maplestory-msa
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - maplestory-network
+    restart: unless-stopped
+
+networks:
+  maplestory-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local 
