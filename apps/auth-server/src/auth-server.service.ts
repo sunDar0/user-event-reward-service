@@ -1,5 +1,6 @@
-import { JwtService, UserDocument, UserPayload, UserService } from '@app/common';
+import { JwtService, UserDocument, UserService } from '@app/common';
 import { RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
+import { UserPayload } from '@app/common/interfaces';
 import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import * as bcrypt from 'bcrypt';
