@@ -150,6 +150,7 @@ export class ApiGatewayController {
       .pipe(map((reward: ResponseCreateRewardDto) => response(reward, '보상 등록 성공', HttpStatus.CREATED)));
   }
 
+  @Roles('AUDITOR')
   @Get('events/:eventId/rewards')
   @GenerateSwaggerApiDoc({
     tags: ['Event', 'Reward'],
