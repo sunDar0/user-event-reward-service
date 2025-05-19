@@ -8,11 +8,11 @@ APP_VERSION=1.0.0
 API_GATEWAY_PORT=3000
 
 # Auth Microservice
-AUTH_SERVICE_HOST=localhost
+AUTH_SERVICE_HOST=auth-server
 AUTH_SERVICE_PORT=3001
 
 # Event Microservice
-EVENT_SERVICE_HOST=localhost
+EVENT_SERVICE_HOST=event-server
 EVENT_SERVICE_PORT=3002
 
 # JWT 설정
