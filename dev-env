@@ -16,11 +16,10 @@ EVENT_SERVICE_HOST=event-server
 EVENT_SERVICE_PORT=3002
 
 # JWT 설정
-JWT_ACCESS_SECRET="maplestory_secret_key_!@#A()@*#"
-JWT_REFRESH_SECRET="maplestory_secret_key_refresh_!@#A()@*#"
+JWT_ACCESS_SECRET="event-platform_secret_key_!@#A()@*#"
+JWT_REFRESH_SECRET="event-platform_secret_key_refresh_!@#A()@*#"
 ACCESS_TOKEN_EXPIRATION=1h
 REFRESH_TOKEN_EXPIRATION=7d
 
 # MongoDB
-MONGO_URI=mongodb://dar:Asd1fgh2@mongodb:27017/maplestory-msa?authSource=admin
-
+MONGO_URI=mongodb://user-1:user-1-password@mongodb:27017/maplestory-msa?authSource=maplestory-msa
