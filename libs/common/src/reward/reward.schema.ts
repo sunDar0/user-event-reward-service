@@ -23,7 +23,7 @@ export class Reward {
   @Prop({ type: Number, required: true, min: -1 })
   quantity: number;
 
-  @Prop({ type: Number, required: true, min: -1 })
+  @Prop({ type: Number, required: true, min: 0 })
   remainingQuantity: number;
 
   @Prop({ type: Date, default: Date.now })
