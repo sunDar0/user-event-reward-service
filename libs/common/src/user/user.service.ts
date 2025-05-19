@@ -37,8 +37,6 @@ export class UserService {
       const createdUser = new this.userModel(RegisterUserDto);
 
       const savedUser = await createdUser.save();
-
-      // 필요한 사용자 정보만 반환
       return savedUser;
     } catch (error) {
       this.logger.error('Error in create:', error);
@@ -48,7 +46,6 @@ export class UserService {
 
   async updateUser(updateUser: UserDocument) {
     try {
-      // _id를 기준으로 유저 정보 업데이트
       await updateUser.save();
     } catch (error) {
       this.logger.error('Error in updateUser:', error);
