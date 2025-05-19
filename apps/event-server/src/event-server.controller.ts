@@ -1,4 +1,5 @@
 import { CreateEventDto, EVENT_EVENT_TYPE, REWARD_EVENT_TYPE } from '@app/common';
+import { CreateRewardRequestDto } from '@app/common/dtos/reward-request.dto';
 import { CreateRewardDto } from '@app/common/dtos/reward.dto';
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -39,5 +40,39 @@ export class EventServerController {
   @MessagePattern({ cmd: REWARD_EVENT_TYPE.GET_REWARDS_BY_EVENT_ID })
   async getEventRewardsByEventId(@Payload() eventId: string) {
     return await this.eventServerService.getRewardsByEventId(eventId);
+  }
+
+  // 보상 요청 생성
+  @MessagePattern({ cmd: REWARD_EVENT_TYPE.CREATE_REWARD_REQUEST })
+  async createRewardRequest(@Payload() payload: { userId: string; requestDto: CreateRewardRequestDto }) {
+    try {
+      const requests = await this.eventServerService.createRewardRequest(payload.userId, payload.requestDto);
+      return requests;
+    } catch (error) {
+      this.logger.error('Error in createRewardRequest:', error);
+      throw error;
+    }
+  }
+
+  // 사용자별 보상 요청 조회
+  @MessagePattern({ cmd: REWARD_EVENT_TYPE.GET_REWARD_REQUESTS_BY_USER_ID })
+  async getRewardRequestsByUserId(@Payload() userId: string) {
+    try {
+      return await this.eventServerService.getRewardRequestsByUserId(userId);
+    } catch (error) {
+      this.logger.error('Error in getRewardRequestsByUserId:', error);
+      throw error;
+    }
+  }
+
+  // 전체 보상 요청 조회
+  @MessagePattern({ cmd: REWARD_EVENT_TYPE.GET_ALL_REWARD_REQUESTS })
+  async getAllRewardRequests(@Payload() filters: Record<string, any> = {}) {
+    try {
+      return await this.eventServerService.getAllRewardRequests(filters);
+    } catch (error) {
+      this.logger.error('Error in getAllRewardRequests:', error);
+      throw error;
+    }
   }
 }
