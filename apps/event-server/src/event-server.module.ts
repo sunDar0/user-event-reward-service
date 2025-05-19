@@ -8,6 +8,7 @@ import { EventServerService } from './event-server.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      envFilePath: ['apps/event-server/.env'],
       validationSchema: validateEventServiceEnv(),
     }),
     CommonModule,

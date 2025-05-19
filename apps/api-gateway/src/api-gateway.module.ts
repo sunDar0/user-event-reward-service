@@ -8,6 +8,7 @@ import { validateApiGateWayEnv } from './helper/validate.helper';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      envFilePath: ['apps/api-gateway/.env'],
       validationSchema: validateApiGateWayEnv(),
     }),
     CommonModule,
