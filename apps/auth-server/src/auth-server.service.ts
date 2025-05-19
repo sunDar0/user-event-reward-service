@@ -3,7 +3,7 @@ import { RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '
 import { UserPayload } from '@app/common/interfaces';
 import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import * as dayjs from 'dayjs';
 import { AuthServerParser } from './auth-server.parser';
 
