@@ -1,6 +1,7 @@
 import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
+import * as dayjs from 'dayjs';
 import { Model } from 'mongoose';
 import { CreateEventDto, EventResponseDto } from '../dtos';
 import { CompareData } from '../interfaces/event.interface';
@@ -81,10 +82,11 @@ export class EventService {
   }
 
   async checkEventCondition(compareData: CompareData, event: EventResponseDto): Promise<boolean> {
-    if (!event) {
+    // 보상 신청일이 이벤트 시작일보다 작거나 종료일보다 크면 이벤트 신청 불가
+    if (dayjs().isBefore(dayjs(event.startDate)) || dayjs().isAfter(dayjs(event.endDate))) {
       throw new RpcException({
-        message: '이벤트를 찾을 수 없습니다.',
-        status: HttpStatus.NOT_FOUND,
+        message: '이벤트 신청 가능한 기간이 아닙니다.',
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
