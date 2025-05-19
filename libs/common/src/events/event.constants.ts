@@ -6,10 +6,8 @@ export enum EVENT_STATUS {
 
 export enum EVENT_CONDITION_TYPE {
   LOGIN_STREAK = 'LOGIN_STREAK', // 로그인 연속 일수
-  REFERRAL_COUNT = 'REFERRAL_COUNT', // 추천 누적 30개 달성
-  PURCHASE_COUNT = 'PURCHASE_COUNT', // 구매 누적 100개 달성
-  MONSTER_KILL = 'MONSTER_KILL', // 모든 몬스터 100마리 잡기
-  MONSTER_KILL_A = 'MONSTER_KILL_A', // A몬스터 100마리 잡기
-  MONSTER_KILL_B = 'MONSTER_KILL_B', // B몬스터 100마리 잡기
-  MONSTER_KILL_C = 'MONSTER_KILL_C', // C몬스터 100마리 잡기
+  RECOMMEND_COUNT = 'RECOMMEND_COUNT', // 추천 누적 n개 달성
+  PURCHASE_COUNT = 'PURCHASE_COUNT', // 구매 누적 n개 달성
+  MONSTER_KILL = 'MONSTER_KILL', // 모든 몬스터 n마리 잡기
+  QUEST_CLEAR = 'QUEST_CLEAR', // 퀘스트 클리어
 }

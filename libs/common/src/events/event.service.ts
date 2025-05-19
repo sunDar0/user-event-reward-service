@@ -1,14 +1,19 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateEventDto, EventResponseDto } from '../dtos';
+import { CompareData } from '../interfaces/event.interface';
+import { EventConditionStrategyFactory } from './event.condition.strategy';
 import { Event, EventDocument } from './event.schema';
 
 @Injectable()
 export class EventService {
   private readonly logger = new Logger(EventService.name);
-  constructor(@InjectModel(Event.name) private eventModel: Model<EventDocument>) {}
+  constructor(
+    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    private readonly eventConditionStrategyFactory: EventConditionStrategyFactory,
+  ) {}
 
   /**
    * 이벤트 생성
@@ -75,9 +80,32 @@ export class EventService {
     return this.toResponseDto(event);
   }
 
+  async checkEventCondition(compareData: CompareData, event: EventResponseDto): Promise<boolean> {
+    if (!event) {
+      throw new RpcException({
+        message: '이벤트를 찾을 수 없습니다.',
+        status: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    try {
+      const strategy = this.eventConditionStrategyFactory.getStrategy(event.conditions.type);
+      return await strategy.validate(compareData, event.conditions);
+    } catch (error) {
+      this.logger.error(`이벤트 조건 검증 중 오류 발생: ${error.message}`, error.stack);
+      // 잘못된 요청일 때
+      if (error instanceof BadRequestException) throw new RpcException({ message: error.message, status: HttpStatus.BAD_REQUEST });
+      // 서버 오류일 때
+      throw new RpcException({
+        message: '이벤트 조건 검증 중 오류가 발생했습니다.',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
   private toResponseDto(event: EventDocument): EventResponseDto {
     return {
-      _id: event._id.toString(),
+      eventId: event._id.toString(),
       title: event.title,
       description: event.description,
       startDate: event.startDate.toISOString(),
@@ -86,7 +114,7 @@ export class EventService {
       conditions: event.conditions,
       createdBy: event.createdBy,
       rewards: event.rewards?.map((reward) => ({
-        _id: reward._id.toString(),
+        rewardId: reward._id.toString(),
         eventId: reward.eventId.toString(),
         type: reward.type,
         name: reward.name,

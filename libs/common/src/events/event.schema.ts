@@ -1,26 +1,26 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { HydratedDocument, Types } from 'mongoose';
-import { IEventCondition } from '../interfaces';
+import { EventConditionDetails } from '../interfaces/event.interface';
 import { Reward } from '../reward/reward.schema';
 import { EVENT_CONDITION_TYPE, EVENT_STATUS } from './event.constants';
 
 export type EventDocument = HydratedDocument<Event & { rewards?: Reward[] }>;
 
-export class EventCondition implements IEventCondition {
+export class EventCondition {
   @ApiProperty({
     description: '이벤트 조건 타입',
     example: EVENT_CONDITION_TYPE.LOGIN_STREAK,
   })
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: String, enum: EVENT_CONDITION_TYPE })
   type: EVENT_CONDITION_TYPE;
 
   @ApiProperty({
     description: '이벤트 조건 상세',
-    example: { targetCount: 7, targetDate: '2025-01-01', targetAmount: 10000 },
+    example: { targetCount: 7 },
   })
   @Prop({ required: true, type: Object })
-  details: Record<string, any>;
+  details: EventConditionDetails[EVENT_CONDITION_TYPE];
 }
 
 @Schema({ timestamps: true })
