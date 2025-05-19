@@ -8,14 +8,15 @@ services:
       args:
         SERVICE_NAME: api-gateway
         PORT: 3000
+    environment:
+      - SERVICE_NAME=api-gateway
+      - PORT=3000
     ports:
       - "3000:3000"
     env_file:
       - ./dev-env
     volumes:
-      - .:/app
-      - /app/node_modules
-      - ./dev-env:/app/apps/api-gateway/.env
+      - ./dev-env:/app/apps/api-gateway/.env:ro
     command: node dist/apps/api-gateway/main
     depends_on:
       - auth-server
@@ -31,14 +32,15 @@ services:
       args:
         SERVICE_NAME: auth-server
         PORT: 3001
+    environment:
+      - SERVICE_NAME=auth-server
+      - PORT=3001
     ports:
       - "3001:3001"
     env_file:
       - ./dev-env
     volumes:
-      - .:/app
-      - /app/node_modules
-      - ./dev-env:/app/apps/auth-server/.env
+      - ./dev-env:/app/apps/auth-server/.env:ro
     command: node dist/apps/auth-server/main
     depends_on:
       - mongodb
@@ -53,14 +55,15 @@ services:
       args:
         SERVICE_NAME: event-server
         PORT: 3002
+    environment:
+      - SERVICE_NAME=event-server
+      - PORT=3002
     ports:
       - "3002:3002"
     env_file:
       - ./dev-env
     volumes:
-      - .:/app
-      - /app/node_modules
-      - ./dev-env:/app/apps/event-server/.env
+      - ./dev-env:/app/apps/event-server/.env:ro
     command: node dist/apps/event-server/main
     depends_on:
       - mongodb
@@ -73,8 +76,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=dar
-      - MONGO_INITDB_ROOT_PASSWORD=Asd1fgh2
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=12121212
       - MONGO_INITDB_DATABASE=maplestory-msa
     volumes:
       - mongodb_data:/data/db
