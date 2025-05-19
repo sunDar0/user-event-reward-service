@@ -33,6 +33,12 @@ export class RewardRequest {
   @Prop({ type: Date })
   claimedAt?: Date;
 
+  @Prop({ type: String })
+  notes?: string;
+
+  @Prop({ type: Object })
+  additionalInfo?: Record<string, any>;
+
   @Prop({ type: Date, default: Date.now })
   createdAt: Date;
 

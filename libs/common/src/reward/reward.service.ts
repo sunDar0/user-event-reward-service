@@ -19,18 +19,31 @@ export class RewardService {
   }
 
   async validateRewardQuantity(rewardId: string): Promise<boolean> {
-    // TODO: Implement reward quantity validation logic
-    throw new Error('Method not implemented.');
+    const reward = await this.rewardModel.findById(rewardId).exec();
+    if (!reward) {
+      return false;
+    }
+    // 무제한(-1) 또는 아직 남아있는 수량이 있는 경우 true 반환
+    return reward.quantity === -1 || reward.remainingQuantity > 0;
   }
 
   async decreaseRewardQuantity(rewardId: string): Promise<void> {
-    // TODO: Implement decrease reward quantity logic
-    throw new Error('Method not implemented.');
+    const reward = await this.rewardModel.findById(rewardId).exec();
+    if (!reward || reward.quantity === -1) {
+      // 무제한(-1)인 경우 수량을 차감하지 않음
+      return;
+    }
+
+    if (reward.remainingQuantity <= 0) {
+      throw new Error('보상 수량이 다 소진되었습니다.');
+    }
+
+    await this.rewardModel.findByIdAndUpdate(rewardId, { $inc: { remainingQuantity: -1 } }, { new: true }).exec();
   }
 
   private toResponseDto(reward: RewardDocument): RewardResponseDto {
     return {
-      _id: reward._id.toString(),
+      rewardId: reward._id.toString(),
       eventId: reward.eventId,
       type: reward.type,
       name: reward.name,
