@@ -13,6 +13,7 @@ import { ResponseCreateRewardRequestDto, ResponseGetAllRewardRequestsDto, Respon
 import { ResponseCreateRewardDto, ResponseGetRewardsByEventIdDto } from './dtos/response.reward.dto';
 import { ResponseRegisterUserDto } from './dtos/response.user.dto';
 import { EVENT_FIXTURE } from './fixtures/event.fixture';
+import { REWARD_FIXTURE } from './fixtures/reward.fixture';
 import { response } from './helper/response.helper';
 
 @ApiBearerAuth('jwt')
@@ -141,7 +142,7 @@ export class ApiGatewayController {
     summary: '보상 등록',
     description: '특정 이벤트에 보상을 등록합니다.',
     param: { type: 'string', name: 'eventId', description: '이벤트 ID' },
-    body: { type: CreateRewardDto },
+    body: { type: CreateRewardDto, examples: REWARD_FIXTURE },
     responseType: ResponseCreateRewardDto,
   })
   async createReward(@Param('eventId', ObjectIdPipe) eventId: string, @Body() createRewardDto: CreateRewardDto) {
