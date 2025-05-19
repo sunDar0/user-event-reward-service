@@ -75,7 +75,7 @@ export class UpdateUserRolesDto {
   roles: USER_ROLES[];
 }
 
-export class UserInfoDto extends PickType(UserAuthDto, ['email', 'name', 'roles']) {
+export class UserInfoDto extends PickType(UserAuthDto, ['email', 'name', 'roles'] as const) {
   @ApiProperty({
     description: '사용자 ID',
     example: '1234567890abcdef',

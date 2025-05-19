@@ -49,7 +49,7 @@ export class UpdateRewardDto {
 
 export class RewardResponseDto {
   @ApiProperty({ description: '보상 ID' })
-  _id: string;
+  rewardId: string;
 
   @ApiProperty({ description: '이벤트 ID' })
   eventId: string;

@@ -54,7 +54,7 @@ export class CreateEventDto {
 
 export class EventResponseDto {
   @ApiProperty({ description: '이벤트 ID' })
-  _id: string;
+  eventId: string;
 
   @ApiProperty({ description: '이벤트 제목' })
   title: string;

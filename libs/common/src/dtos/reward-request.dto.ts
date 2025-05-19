@@ -1,29 +1,34 @@
+import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
-import { RewardRequestStatus } from '../reward/reward-request.schema';
+import { Transform } from 'class-transformer';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Types } from 'mongoose';
+import { CompareData } from '../interfaces/event.interface';
+import { REWARD_REQUEST_STATUS } from '../reward/reward.constants';
+import { RewardResponseDto } from './reward.dto';
 
 export class CreateRewardRequestDto {
   @ApiProperty({ description: '이벤트 ID' })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (!Types.ObjectId.isValid(value)) {
+      throw new BadRequestException('유효하지 않은 ID 형식입니다.');
+    }
+    return value;
+  })
   eventId: string;
 
-  @ApiProperty({ description: '보상 ID' })
-  @IsString()
+  @ApiProperty({ description: '해당 유저의 이벤트 달성 정보' })
   @IsNotEmpty()
-  rewardId: string;
-
-  @ApiProperty({ description: '추가 정보', required: false })
-  @IsObject()
-  @IsOptional()
-  additionalInfo?: Record<string, any>;
+  completedInfo: CompareData;
 }
 
 export class UpdateRewardRequestStatusDto {
-  @ApiProperty({ enum: RewardRequestStatus, description: '보상 요청 상태' })
-  @IsEnum(RewardRequestStatus)
+  @ApiProperty({ enum: REWARD_REQUEST_STATUS, description: '보상 요청 상태' })
+  @IsEnum(REWARD_REQUEST_STATUS)
   @IsNotEmpty()
-  status: RewardRequestStatus;
+  status: REWARD_REQUEST_STATUS;
 
   @ApiProperty({ description: '처리 메모', required: false })
   @IsString()
@@ -33,7 +38,7 @@ export class UpdateRewardRequestStatusDto {
 
 export class RewardRequestResponseDto {
   @ApiProperty({ description: '보상 요청 ID' })
-  _id: string;
+  rewardRequestId: string;
 
   @ApiProperty({ description: '사용자 ID' })
   userId: string;
@@ -44,8 +49,8 @@ export class RewardRequestResponseDto {
   @ApiProperty({ description: '보상 ID' })
   rewardId: string;
 
-  @ApiProperty({ enum: RewardRequestStatus, description: '보상 요청 상태' })
-  status: RewardRequestStatus;
+  @ApiProperty({ enum: REWARD_REQUEST_STATUS, description: '보상 요청 상태' })
+  status: REWARD_REQUEST_STATUS;
 
   @ApiProperty({ description: '요청 시간' })
   requestedAt: Date;
@@ -64,4 +69,19 @@ export class RewardRequestResponseDto {
 
   @ApiProperty({ description: '수정일' })
   updatedAt: Date;
+}
+
+export class CreateRewardRequestWithEventDto {
+  @ApiProperty({ description: '이벤트 ID' })
+  @IsString()
+  @IsNotEmpty()
+  eventId: string;
+
+  @ApiProperty({ description: '보상 목록', type: [RewardResponseDto] })
+  @IsArray()
+  @IsNotEmpty()
+  rewards: RewardResponseDto[];
+
+  @ApiProperty({ description: '해당 유저의 이벤트 달성 정보', required: false })
+  completedInfo?: CompareData;
 }
