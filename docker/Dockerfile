@@ -1,50 +1,44 @@
-# Base stage for common dependencies
+# 공통 의존성을 위한 기본 스테이지
 FROM node:18-slim AS base
 
-# Install build tools for bcrypt
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# pnpm 특정 버전 설치
+RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Set working directory
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Copy workspace configuration
+# 워크스페이스 설정 파일 복사
 COPY pnpm-workspace.yaml ./
 COPY package.json pnpm-lock.yaml ./
 
-# Copy all package.json files for proper dependency resolution
+# package.json 파일 복사
 COPY apps/*/package.json ./apps/
 
-# Install all dependencies
-RUN pnpm install --frozen-lockfile
+# 모든 의존성 설치
+RUN pnpm install
 
-# Copy source code
+# 소스 코드 복사
 COPY . .
 
-# Build stage for common library
+# 공통 라이브러리 빌드 스테이지
 FROM base AS common-builder
 RUN pnpm run build:common
 
-# Build stage for each service
+# 각 서비스별 빌드 스테이지
 FROM common-builder AS service-builder
 ARG SERVICE_NAME
 RUN pnpm run build:${SERVICE_NAME}
 
-# Production stage
+# 프로덕션 스테이지
 FROM node:18-slim AS production
 
-# Install build tools for bcrypt
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# pnpm 설치
+RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Set working directory
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Copy workspace configuration and dependencies
+# 워크스페이스 설정 및 의존성 파일 복사
 COPY --from=base /app/pnpm-workspace.yaml ./
 COPY --from=base /app/package.json ./
 COPY --from=base /app/pnpm-lock.yaml ./
@@ -53,17 +47,16 @@ COPY --from=base /app/apps ./apps
 COPY --from=service-builder /app/dist ./dist
 COPY --from=common-builder /app/dist/libs/common ./dist/libs/common
 
-# Install production dependencies
-RUN npm install -g pnpm && \
-    pnpm install --prod --frozen-lockfile
+# 프로덕션 의존성만 설치
+RUN pnpm install --prod
 
-# Set environment variables
+# 환경 변수 설정
 ENV NODE_ENV=production
 ARG PORT
 ENV PORT=${PORT}
 
-# Expose port
+# 포트 노출
 EXPOSE ${PORT}
 
-# Start the application
+# 애플리케이션 실행
 CMD ["node", "dist/apps/${SERVICE_NAME}/main"] 
