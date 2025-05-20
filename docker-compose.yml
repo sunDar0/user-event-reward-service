@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   api-gateway:
@@ -22,7 +22,7 @@ services:
       - auth-server
       - event-server
     networks:
-      - maplestory-network
+      - user-event-reward-service-network
     restart: unless-stopped
 
   auth-server:
@@ -43,9 +43,14 @@ services:
       - ./dev-env:/app/apps/auth-server/.env:ro
     command: node dist/apps/auth-server/main
     depends_on:
-      - mongodb
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
     networks:
-      - maplestory-network
+      - user-event-reward-service-network
     restart: unless-stopped
 
   event-server:
@@ -66,30 +71,109 @@ services:
       - ./dev-env:/app/apps/event-server/.env:ro
     command: node dist/apps/event-server/main
     depends_on:
-      - mongodb
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
     networks:
-      - maplestory-network
+      - user-event-reward-service-network
     restart: unless-stopped
 
-  mongodb:
+  mongodb1:
     image: mongo:6.0
+    container_name: mongodb1
+    command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongodb/mongodb-keyfile"]
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=12121212
-      - MONGO_INITDB_DATABASE=maplestory-msa
+      - MONGO_INITDB_DATABASE=user-event-reward-service-msa
     volumes:
-      - mongodb_data:/data/db
+      - mongodb1_data:/data/db
+      - ./mongodb-keyfile:/etc/mongodb/mongodb-keyfile:ro
       - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
-      - maplestory-network
+      - user-event-reward-service-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb2:
+    image: mongo:6.0
+    container_name: mongodb2
+    command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongodb/mongodb-keyfile"]
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=12121212
+      - MONGO_INITDB_DATABASE=user-event-reward-service-msa
+    volumes:
+      - mongodb2_data:/data/db
+      - ./mongodb-keyfile:/etc/mongodb/mongodb-keyfile:ro
+    networks:
+      - user-event-reward-service-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb3:
+    image: mongo:6.0
+    container_name: mongodb3
+    command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongodb/mongodb-keyfile"]
+    ports:
+      - "27019:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=12121212
+      - MONGO_INITDB_DATABASE=user-event-reward-service-msa
+    volumes:
+      - mongodb3_data:/data/db
+      - ./mongodb-keyfile:/etc/mongodb/mongodb-keyfile:ro
+    networks:
+      - user-event-reward-service-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo-init:
+    image: mongo:6.0
+    container_name: mongo-init
+    depends_on:
+      - mongodb1
+      - mongodb2
+      - mongodb3
+    command: >
+      mongosh --host mongodb1:27017 -u admin -p 12121212 --authenticationDatabase admin --eval '
+        rs.initiate({
+          _id: "rs0",
+          members: [
+            { _id: 0, host: "mongodb1:27017" },
+            { _id: 1, host: "mongodb2:27017" },
+            { _id: 2, host: "mongodb3:27017" }
+          ]
+        })
+      '
+    networks:
+      - user-event-reward-service-network
 
 networks:
-  maplestory-network:
+  user-event-reward-service-network:
     driver: bridge
 
 volumes:
-  mongodb_data:
-    driver: local 
+  mongodb1_data:
+  mongodb2_data:
+  mongodb3_data: 
