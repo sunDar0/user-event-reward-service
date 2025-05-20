@@ -13,7 +13,9 @@ import { ResponseCreateRewardRequestDto, ResponseGetAllRewardRequestsDto, Respon
 import { ResponseCreateRewardDto, ResponseGetRewardsByEventIdDto } from './dtos/response.reward.dto';
 import { ResponseRegisterUserDto } from './dtos/response.user.dto';
 import { EVENT_FIXTURE } from './fixtures/event.fixture';
+import { REWARD_REQUEST_FIXTURE } from './fixtures/reward-request.fixture';
 import { REWARD_FIXTURE } from './fixtures/reward.fixture';
+import { LOGIN_USER_FIXTURE, USER_FIXTURE } from './fixtures/user.fixture';
 import { response } from './helper/response.helper';
 
 @ApiBearerAuth('jwt')
@@ -30,7 +32,7 @@ export class ApiGatewayController {
     summary: '유저 등록',
     description: '유저 등록을 진행합니다.',
     isPublic: true,
-    body: { type: RegisterUserDto },
+    body: { type: RegisterUserDto, examples: USER_FIXTURE },
     responseType: ResponseRegisterUserDto,
   })
   register(@Body() RegisterUserDto: RegisterUserDto) {
@@ -45,7 +47,7 @@ export class ApiGatewayController {
     summary: '로그인',
     description: '로그인을 시도합니다.',
     isPublic: true,
-    body: { type: UserLoginDto },
+    body: { type: UserLoginDto, examples: LOGIN_USER_FIXTURE },
     responseType: ResponseLoginDto,
   })
   login(@Body() loginDto: UserLoginDto) {
@@ -75,7 +77,7 @@ export class ApiGatewayController {
   @GenerateSwaggerApiDoc({
     tags: ['Auth'],
     summary: '사용자 권한 수정',
-    description: '사용자의 권한을 수정합니다.',
+    description: '사용자의 권한을 수정합니다(덮어씌움).',
     param: { type: 'string', name: 'userId', description: '권한을 수정할 대상자의 식별자' },
     body: { type: UpdateUserRolesDto },
     responseType: ResponseUpdateUserRolesDto,
@@ -173,7 +175,7 @@ export class ApiGatewayController {
     tags: ['Event', 'Reward'],
     summary: '보상 요청 생성',
     description: '이벤트 보상을 요청합니다.',
-    body: { type: CreateRewardRequestDto },
+    body: { type: CreateRewardRequestDto, examples: REWARD_REQUEST_FIXTURE },
     responseType: ResponseCreateRewardRequestDto,
   })
   createRewardRequest(@Body() requestDto: CreateRewardRequestDto, @UserAuth() userAuth: UserAuthDto) {
