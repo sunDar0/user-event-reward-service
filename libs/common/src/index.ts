@@ -10,5 +10,6 @@ export * from './dtos';
 export * from './common.helper';
 export * from './events';
 export * from './exception-filters';
+export * from './exceptions/base.exception';
 export * from './reward';
 export * from './user';
