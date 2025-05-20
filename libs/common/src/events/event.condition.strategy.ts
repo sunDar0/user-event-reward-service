@@ -69,10 +69,11 @@ export class MonsterKillStrategy implements EventConditionStrategy {
   async validate(compareData: CompareData, condition: EventCondition<EVENT_CONDITION_TYPE.MONSTER_KILL>): Promise<boolean> {
     const { monsterId, targetCount } = condition.details;
     const { killedMonsters = [] } = compareData;
-    // 몬스터 처치 날짜가 없으면 예외 발생 killedMonsters: { monsterId: string; count: number }[];
+    // 몬스터 처지 정보가 없으면 예외 발생
     if (killedMonsters.length == 0) throw new BadRequestException('killedMonsters is required');
+    // 몬스터 처치 횟수 조회
     const monsterKillCount = killedMonsters.find((monster) => monster.monsterId === monsterId)?.count ?? 0;
-
+    // 몬스터 처치 횟수가 조건에 맞으면 true, 아니면 false 반환
     return monsterKillCount >= targetCount;
   }
 }
@@ -88,6 +89,9 @@ export class RecommendCountStrategy implements EventConditionStrategy {
   async validate(compareData: CompareData, condition: EventCondition<EVENT_CONDITION_TYPE.RECOMMEND_COUNT>): Promise<boolean> {
     const { targetCount } = condition.details;
     const { recommendCount = 0 } = compareData;
+    // 추천 횟수가 없으면 예외 발생
+    if (recommendCount == 0) throw new BadRequestException('recommendCount is required');
+    // 추천 횟수가 조건에 맞으면 true, 아니면 false 반환
     return recommendCount >= targetCount;
   }
 }
