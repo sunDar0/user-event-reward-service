@@ -1,41 +1,23 @@
-import { AUTH_EVENT_TYPE, EVENT_EVENT_TYPE, REWARD_EVENT_TYPE, USER_ROLES } from '@app/common';
-import { BaseResponseDto, CreateEventDto, CreateRewardDto, RegisterUserDto, UserInfoDto, UserLoginDto } from '@app/common/dtos';
+import { AUTH_EVENT_TYPE, EVENT_EVENT_TYPE, REWARD_EVENT_TYPE, REWARD_REQUEST_STATUS, setValueInJestProvide, USER_ROLES } from '@app/common';
+import { GetRewardRequestsQueryDto, UpdateUserRolesDto, UserInfoDto } from '@app/common/dtos';
 import { EventResponseDto } from '@app/common/dtos/event.dto';
-import { EVENT_CONDITION_TYPE, EVENT_STATUS } from '@app/common/events/event.constants';
-import { EventCondition } from '@app/common/events/event.schema';
 import { UserAuthDto } from '@app/common/interfaces';
-import { REWARD_TYPE } from '@app/common/reward/reward.constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
 import { firstValueFrom, of } from 'rxjs';
 import { ApiGatewayController } from './api-gateway.controller';
 import { ApiGatewayService } from './api-gateway.service';
-import { ResponseLoginDto } from './dtos/response.auth.dto';
-import { ResponseCreateEventDto, ResponseGetAllEventsDto } from './dtos/response.event.dto';
-import { ResponseCreateRewardDto, ResponseGetRewardsByEventIdDto } from './dtos/response.reward.dto';
+import { ResponseLoginDto, ResponseRefreshTokenDto, ResponseUpdateUserRolesDto } from './dtos/response.auth.dto';
+import { EVENT_FIXTURE } from './fixtures/event.fixture';
+import { REWARD_REQUEST_FIXTURE } from './fixtures/reward-request.fixture';
+import { REWARD_FIXTURE } from './fixtures/reward.fixture';
+import { LOGIN_USER_FIXTURE, USER_FIXTURE } from './fixtures/user.fixture';
 
-interface ResponseRegisterUserDto {
-  user: UserInfoDto;
-}
+type MockApiGatewayService = jest.Mocked<ApiGatewayService>;
 
 describe('ApiGatewayController', () => {
   let controller: ApiGatewayController;
-  let service: ApiGatewayService;
-
-  const mockApiGatewayService = {
-    registerUser: jest.fn(),
-    login: jest.fn(),
-    refreshAccessToken: jest.fn(),
-    updateUserRoles: jest.fn(),
-    createEvent: jest.fn(),
-    getAllEvents: jest.fn(),
-    getEventById: jest.fn(),
-    createReward: jest.fn(),
-    getRewardsByEventId: jest.fn(),
-    createRewardRequest: jest.fn(),
-    getMyRewardRequests: jest.fn(),
-    getAllRewardRequests: jest.fn(),
-  };
+  let service: MockApiGatewayService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -43,187 +25,188 @@ describe('ApiGatewayController', () => {
       providers: [
         {
           provide: ApiGatewayService,
-          useValue: mockApiGatewayService,
+          useValue: setValueInJestProvide(ApiGatewayService),
         },
       ],
     }).compile();
 
     controller = module.get<ApiGatewayController>(ApiGatewayController);
-    service = module.get<ApiGatewayService>(ApiGatewayService);
+    service = module.get<MockApiGatewayService>(ApiGatewayService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Auth Endpoints', () => {
+  describe('AUTH EVENT 엔드포인트', () => {
     describe('register', () => {
-      it('should register a new user successfully', async () => {
+      it('유저 등록을 성공해야한다.', async () => {
         // Arrange
-        const registerDto: RegisterUserDto = {
-          email: 'test@example.com',
-          password: 'password123',
-          name: 'testuser',
-          roles: [USER_ROLES.USER],
-        };
+        const registerDto = USER_FIXTURE.USER_1.value;
         const mockResponse: UserInfoDto = {
           userId: '1',
-          email: 'test@example.com',
-          name: 'testuser',
-          roles: [USER_ROLES.USER],
+          email: registerDto.email,
+          name: registerDto.name,
+          roles: registerDto.roles,
         };
-        const mockBaseResponse: BaseResponseDto<ResponseRegisterUserDto> = {
-          code: 0,
-          result: true,
-          status: 200,
-          message: '유저등록이 완료되었습니다.',
-          data: { user: mockResponse },
-        };
-        mockApiGatewayService.registerUser.mockReturnValue(of(mockBaseResponse));
+        const mockServiceResponse = { user: mockResponse };
+        service.registerUser.mockReturnValue(of(mockServiceResponse));
 
         // Act
-        const result = await firstValueFrom<BaseResponseDto<ResponseRegisterUserDto>>(controller.register(registerDto));
+        const result = await firstValueFrom(controller.register(registerDto));
 
         // Assert
         expect(service.registerUser).toHaveBeenCalledWith(AUTH_EVENT_TYPE.REGISTER, registerDto);
-        expect(result.data.user).toEqual(mockResponse);
-        expect(result.message).toBe('유저등록이 완료되었습니다.');
+        expect(result).toEqual({ code: 0, status: 201, message: '유저등록이 완료되었습니다.', data: mockServiceResponse });
       });
     });
 
     describe('login', () => {
-      it('should login user successfully', async () => {
+      it('로그인을 성공해야한다.', async () => {
         // Arrange
-        const loginDto: UserLoginDto = {
-          email: 'test@example.com',
-          password: 'password123',
-        };
-        const mockResponse: ResponseLoginDto = {
+        const loginDto = LOGIN_USER_FIXTURE.USER_1.value;
+        const mockLoginResponse: ResponseLoginDto = {
           accessToken: 'token123',
           refreshToken: 'refresh123',
         };
-        const mockBaseResponse: BaseResponseDto<ResponseLoginDto> = {
-          code: 0,
-          result: true,
-          status: 200,
-          message: '로그인 성공',
-          data: mockResponse,
-        };
-        mockApiGatewayService.login.mockReturnValue(of(mockBaseResponse));
+        service.login.mockReturnValue(of(mockLoginResponse));
 
         // Act
-        const result = await firstValueFrom<BaseResponseDto<ResponseLoginDto>>(controller.login(loginDto));
+        const result = await firstValueFrom(controller.login(loginDto));
 
         // Assert
         expect(service.login).toHaveBeenCalledWith(AUTH_EVENT_TYPE.LOGIN, loginDto);
-        expect(result.data).toEqual(mockResponse);
-        expect(result.message).toBe('로그인 성공');
+        expect(result).toEqual({ code: 0, status: 200, message: '로그인 성공', data: mockLoginResponse });
+      });
+    });
+
+    describe('refreshToken', () => {
+      it('토큰 갱신을 성공해야한다.', async () => {
+        // Arrange
+        const refreshToken = 'refresh-token-123';
+        const mockRefreshTokenResponse: ResponseRefreshTokenDto = {
+          newAccessToken: 'new-access-token-123',
+          newRefreshToken: 'new-refresh-token-123',
+        };
+        service.refreshAccessToken.mockReturnValue(of(mockRefreshTokenResponse));
+
+        // Act
+        const result = await firstValueFrom(controller.refreshToken(refreshToken));
+
+        // Assert
+        expect(service.refreshAccessToken).toHaveBeenCalledWith(AUTH_EVENT_TYPE.REFRESH_TOKEN, refreshToken);
+        expect(result).toEqual({ code: 0, status: 200, message: '토큰 갱신 성공', data: mockRefreshTokenResponse });
+      });
+    });
+
+    describe('updateUserRoles', () => {
+      it('사용자 권한 수정을 성공해야한다.', async () => {
+        // Arrange
+        const userId = '507f1f77bcf86cd799439011';
+        const updateRolesDto: UpdateUserRolesDto = {
+          roles: [USER_ROLES.OPERATOR, USER_ROLES.AUDITOR],
+        };
+        const mockUpdateRolesResponse: ResponseUpdateUserRolesDto = {
+          user: {
+            userId,
+            email: 'test@example.com',
+            name: 'Test User',
+            roles: updateRolesDto.roles,
+          },
+        };
+        service.updateUserRoles.mockReturnValue(of(mockUpdateRolesResponse));
+
+        // Act
+        const result = await firstValueFrom(controller.updateUserRoles(userId, updateRolesDto));
+
+        // Assert
+        expect(service.updateUserRoles).toHaveBeenCalledWith(AUTH_EVENT_TYPE.UPDATE_ROLES, userId, updateRolesDto);
+        expect(result).toEqual({ code: 0, status: 200, message: '사용자 권한 수정 성공', data: mockUpdateRolesResponse });
       });
     });
   });
 
-  describe('Event Endpoints', () => {
+  describe('EVENT 엔드포인트', () => {
     describe('createEvent', () => {
-      it('should create event successfully', async () => {
+      it('이벤트 생성을 성공해야한다.', async () => {
         // Arrange
-        const eventDto: CreateEventDto = {
-          title: 'Test Event',
-          description: 'Test Description',
-          startDate: '2024-03-20',
-          endDate: '2024-03-21',
-          status: EVENT_STATUS.ACTIVE,
-          conditions: {
-            type: EVENT_CONDITION_TYPE.LOGIN_STREAK,
-            details: { targetCount: 7 },
-          } as EventCondition,
-        };
+        const eventDto = EVENT_FIXTURE.LOGIN_STREAK.value;
         const userAuth: UserAuthDto = {
-          _id: 'user123',
-          email: 'test@example.com',
-          name: 'Test User',
-          roles: [USER_ROLES.OPERATOR],
+          _id: '507f1f77bcf86cd799439011',
+          ...USER_FIXTURE.OPERATOR_1.value,
         };
         const mockEventResponse: EventResponseDto = {
           eventId: '1',
-          title: eventDto.title,
-          description: eventDto.description,
-          startDate: eventDto.startDate,
-          endDate: eventDto.endDate,
-          status: eventDto.status,
-          conditions: eventDto.conditions,
+          ...eventDto,
           createdBy: new Types.ObjectId(userAuth._id),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        const mockBaseResponse: BaseResponseDto<ResponseCreateEventDto> = {
-          code: 0,
-          result: true,
-          status: 200,
-          message: '이벤트 생성 성공',
-          data: { event: mockEventResponse },
-        };
-        mockApiGatewayService.createEvent.mockReturnValue(of(mockBaseResponse));
+        const mockServiceResponse = { event: mockEventResponse };
+        service.createEvent.mockReturnValue(of(mockServiceResponse));
 
         // Act
-        const result = await firstValueFrom<BaseResponseDto<ResponseCreateEventDto>>(controller.createEvent(eventDto, userAuth));
+        const result = await firstValueFrom(controller.createEvent(eventDto, userAuth));
 
         // Assert
         expect(service.createEvent).toHaveBeenCalledWith(EVENT_EVENT_TYPE.CREATE_EVENT, eventDto, userAuth._id);
-        expect(result.data).toEqual({ event: mockEventResponse });
-        expect(result.message).toBe('이벤트 생성 성공');
+        expect(result).toEqual({ code: 0, status: 201, message: '이벤트 생성 성공', data: mockServiceResponse });
       });
     });
 
     describe('getAllEvents', () => {
-      it('should get all events successfully', async () => {
+      it('모든 이벤트를 조회할 수 있어야한다.', async () => {
         // Arrange
         const mockEventResponse: EventResponseDto = {
           eventId: '1',
-          title: 'Event 1',
-          description: 'Description 1',
-          startDate: '2024-03-20',
-          endDate: '2024-03-21',
-          status: EVENT_STATUS.ACTIVE,
-          conditions: {
-            type: EVENT_CONDITION_TYPE.LOGIN_STREAK,
-            details: { targetCount: 7 },
-          } as EventCondition,
-          createdBy: new Types.ObjectId('user123'),
+          ...EVENT_FIXTURE.LOGIN_STREAK.value,
+          createdBy: new Types.ObjectId('507f1f77bcf86cd799439011'),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        const mockBaseResponse: BaseResponseDto<ResponseGetAllEventsDto> = {
-          code: 0,
-          result: true,
-          status: 200,
-          message: '이벤트 목록 조회 성공',
-          data: { events: [mockEventResponse] },
-        };
-        mockApiGatewayService.getAllEvents.mockReturnValue(of(mockBaseResponse));
+        const mockServiceResponse = { events: [mockEventResponse] };
+        service.getAllEvents.mockReturnValue(of(mockServiceResponse));
 
         // Act
-        const result = await firstValueFrom<BaseResponseDto<ResponseGetAllEventsDto>>(controller.getAllEvents());
+        const result = await firstValueFrom(controller.getAllEvents());
 
         // Assert
         expect(service.getAllEvents).toHaveBeenCalledWith(EVENT_EVENT_TYPE.GET_ALL_EVENTS);
-        expect(result.data).toEqual({ events: [mockEventResponse] });
-        expect(result.message).toBe('이벤트 목록 조회 성공');
+        expect(result).toEqual({ code: 0, status: 200, message: '이벤트 목록 조회 성공', data: mockServiceResponse });
+      });
+    });
+
+    describe('getEventById', () => {
+      it('이벤트 상세 조회를 성공해야한다.', async () => {
+        // Arrange
+        const eventId = '507f1f77bcf86cd799439011';
+        const mockEventResponse: EventResponseDto = {
+          eventId,
+          ...EVENT_FIXTURE.LOGIN_STREAK.value,
+          createdBy: new Types.ObjectId('507f1f77bcf86cd799439011'),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const mockServiceResponse = { event: mockEventResponse };
+        service.getEventById.mockReturnValue(of(mockServiceResponse));
+
+        // Act
+        const result = await firstValueFrom(controller.getEventById(eventId));
+
+        // Assert
+        expect(service.getEventById).toHaveBeenCalledWith(EVENT_EVENT_TYPE.GET_EVENT_BY_ID, eventId);
+        expect(result).toEqual({ code: 0, status: 200, message: '이벤트 상세 조회 성공', data: mockServiceResponse });
       });
     });
   });
 
-  describe('Reward Endpoints', () => {
+  describe('REWARD 엔드포인트', () => {
     describe('createReward', () => {
-      it('should create reward successfully', async () => {
+      it('보상 생성을 성공해야한다.', async () => {
         // Arrange
         const eventId = 'event123';
-        const rewardDto: CreateRewardDto = {
-          name: 'Test Reward',
-          type: REWARD_TYPE.ITEM,
-          quantity: 100,
-          details: { itemId: 'item123' },
-        };
-        const mockResponse: ResponseCreateRewardDto = {
+        const rewardDto = REWARD_FIXTURE.ITEM.value;
+        const mockRewardResponse = {
           reward: {
             rewardId: '1',
             eventId,
@@ -233,53 +216,137 @@ describe('ApiGatewayController', () => {
             updatedAt: new Date(),
           },
         };
-        const mockBaseResponse: BaseResponseDto<ResponseCreateRewardDto> = {
-          code: 0,
-          result: true,
-          status: 200,
-          message: '보상 등록 성공',
-          data: mockResponse,
-        };
-        mockApiGatewayService.createReward.mockReturnValue(of(mockBaseResponse));
+        service.createReward.mockReturnValue(of(mockRewardResponse));
 
         // Act
-        const result = await firstValueFrom<BaseResponseDto<ResponseCreateRewardDto>>(controller.createReward(eventId, rewardDto));
+        const result = await firstValueFrom(controller.createReward(eventId, rewardDto));
 
         // Assert
         expect(service.createReward).toHaveBeenCalledWith(REWARD_EVENT_TYPE.CREATE_REWARD, eventId, rewardDto);
-        expect(result.data).toEqual(mockResponse);
-        expect(result.message).toBe('보상 등록 성공');
+        expect(result).toEqual({ code: 0, status: 201, message: '보상 등록 성공', data: mockRewardResponse });
       });
     });
 
     describe('getRewardsByEventId', () => {
-      it('should get rewards by event id successfully', async () => {
+      it('이벤트 아이디로 보상을 조회할 수 있어야한다.', async () => {
         // Arrange
         const eventId = 'event123';
-        const mockResponse: ResponseGetRewardsByEventIdDto = {
+        const mockRewardsResponse = {
           rewards: [
             {
               rewardId: '1',
               eventId,
-              name: 'Reward 1',
-              type: REWARD_TYPE.ITEM,
-              quantity: 100,
-              remainingQuantity: 100,
-              details: {},
+              ...REWARD_FIXTURE.ITEM.value,
+              remainingQuantity: REWARD_FIXTURE.ITEM.value.quantity,
               createdAt: new Date(),
               updatedAt: new Date(),
             },
           ],
         };
-        mockApiGatewayService.getRewardsByEventId.mockReturnValue(of(mockResponse));
+        service.getRewardsByEventId.mockReturnValue(of(mockRewardsResponse));
 
         // Act
-        const result = await firstValueFrom<BaseResponseDto<ResponseGetRewardsByEventIdDto>>(controller.getRewardsByEventId(eventId));
+        const result = await firstValueFrom(controller.getRewardsByEventId(eventId));
 
         // Assert
         expect(service.getRewardsByEventId).toHaveBeenCalledWith(REWARD_EVENT_TYPE.GET_REWARDS_BY_EVENT_ID, eventId);
-        expect(result.data).toEqual(mockResponse);
-        expect(result.message).toBe('보상 목록 조회 성공');
+        expect(result).toEqual({ code: 0, status: 200, message: '보상 목록 조회 성공', data: mockRewardsResponse });
+      });
+    });
+  });
+
+  describe('REWARD REQUEST 엔드포인트', () => {
+    describe('createRewardRequest', () => {
+      it('보상 요청을 성공해야한다.', async () => {
+        // Arrange
+        const requestDto = REWARD_REQUEST_FIXTURE.LOGIN_STREAK_REWARD_REQUEST.value;
+        const userAuth: UserAuthDto = {
+          _id: '507f1f77bcf86cd799439011',
+          ...USER_FIXTURE.USER_1.value,
+        };
+        const mockRewardRequestResponse = {
+          rewardRequest: {
+            rewardRequestId: '1',
+            userId: userAuth._id,
+            eventId: requestDto.eventId,
+            rewardId: 'reward123',
+            status: REWARD_REQUEST_STATUS.PENDING,
+            requestedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        };
+        service.createRewardRequest.mockReturnValue(of(mockRewardRequestResponse));
+
+        // Act
+        const result = await firstValueFrom(controller.createRewardRequest(requestDto, userAuth));
+
+        // Assert
+        expect(service.createRewardRequest).toHaveBeenCalledWith(REWARD_EVENT_TYPE.CREATE_REWARD_REQUEST, userAuth._id, requestDto);
+        expect(result).toEqual({ code: 0, status: 201, message: '보상 요청 성공', data: mockRewardRequestResponse });
+      });
+    });
+
+    describe('getMyRewardRequests', () => {
+      it('내 보상 요청 내역을 조회할 수 있어야한다.', async () => {
+        // Arrange
+        const userAuth: UserAuthDto = {
+          _id: '507f1f77bcf86cd799439011',
+          ...USER_FIXTURE.USER_1.value,
+        };
+        const mockRewardRequestsResponse = {
+          rewardRequests: [
+            {
+              rewardRequestId: '1',
+              userId: userAuth._id,
+              eventId: REWARD_REQUEST_FIXTURE.LOGIN_STREAK_REWARD_REQUEST.value.eventId,
+              rewardId: 'reward123',
+              status: REWARD_REQUEST_STATUS.PENDING,
+              requestedAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        };
+        service.getMyRewardRequests.mockReturnValue(of(mockRewardRequestsResponse));
+
+        // Act
+        const result = await firstValueFrom(controller.getMyRewardRequests(userAuth));
+
+        // Assert
+        expect(service.getMyRewardRequests).toHaveBeenCalledWith(REWARD_EVENT_TYPE.GET_REWARD_REQUESTS_BY_USER_ID, userAuth._id);
+        expect(result).toEqual({ code: 0, status: 200, message: '보상 요청 내역 조회 성공', data: mockRewardRequestsResponse });
+      });
+    });
+
+    describe('getAllRewardRequests', () => {
+      it('전체 보상 요청 내역을 조회할 수 있어야한다.', async () => {
+        // Arrange
+        const query: GetRewardRequestsQueryDto = {
+          status: REWARD_REQUEST_STATUS.PENDING,
+        };
+        const mockRewardRequestsResponse = {
+          rewardRequests: [
+            {
+              rewardRequestId: '1',
+              userId: '507f1f77bcf86cd799439011',
+              eventId: REWARD_REQUEST_FIXTURE.LOGIN_STREAK_REWARD_REQUEST.value.eventId,
+              rewardId: 'reward123',
+              status: REWARD_REQUEST_STATUS.PENDING,
+              requestedAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        };
+        service.getAllRewardRequests.mockReturnValue(of(mockRewardRequestsResponse));
+
+        // Act
+        const result = await firstValueFrom(controller.getAllRewardRequests(query));
+
+        // Assert
+        expect(service.getAllRewardRequests).toHaveBeenCalledWith(REWARD_EVENT_TYPE.GET_ALL_REWARD_REQUESTS, query);
+        expect(result).toEqual({ code: 0, status: 200, message: '전체 보상 요청 내역 조회 성공', data: mockRewardRequestsResponse });
       });
     });
   });
