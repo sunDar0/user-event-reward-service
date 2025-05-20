@@ -270,3 +270,5 @@ pn t test:cov
 - **테스트 케이스**
   - api.gateway.controller
   - api.gateway.servcie
+## 개선 사항
+- 예외 처리 중앙화
