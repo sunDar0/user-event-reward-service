@@ -203,8 +203,6 @@ export class ApiGatewayService {
    * @param serviceName 서비스 이름
    */
   private handleServiceError(error: any, serviceName: string): never {
-    console.error(`${serviceName} Service Error:`, error);
-
     // 에러 상태 코드가 401이면 UnauthorizedException 재생성
     if (error.status === 401 || error.statusCode === 401) {
       const message = error.message || '인증에 실패했습니다.';
@@ -218,6 +216,6 @@ export class ApiGatewayService {
       error: error.error || 'Internal Server Error',
     };
 
-    throw errorResponse;
+    throw new Error(JSON.stringify(errorResponse));
   }
 }

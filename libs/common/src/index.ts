@@ -7,6 +7,7 @@ export * from './common.decorator';
 export * from './common.module';
 export * from './dtos';
 
+export * from './common.helper';
 export * from './events';
 export * from './exception-filters';
 export * from './reward';
