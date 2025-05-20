@@ -1,5 +1,5 @@
 import { CreateEventDto, EVENT_EVENT_TYPE, REWARD_EVENT_TYPE } from '@app/common';
-import { CreateRewardRequestDto } from '@app/common/dtos/reward-request.dto';
+import { CreateRewardRequestDto, GetRewardRequestsQueryDto } from '@app/common/dtos/reward-request.dto';
 import { CreateRewardDto } from '@app/common/dtos/reward.dto';
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -67,7 +67,7 @@ export class EventServerController {
 
   // 전체 보상 요청 조회
   @MessagePattern({ cmd: REWARD_EVENT_TYPE.GET_ALL_REWARD_REQUESTS })
-  async getAllRewardRequests(@Payload() filters: Record<string, any> = {}) {
+  async getAllRewardRequests(@Payload() filters: GetRewardRequestsQueryDto) {
     try {
       return await this.eventServerService.getAllRewardRequests(filters);
     } catch (error) {
