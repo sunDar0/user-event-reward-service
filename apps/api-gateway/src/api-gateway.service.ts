@@ -1,7 +1,18 @@
 import { CreateEventDto, EventResponseDto, RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common';
 import { CreateRewardRequestDto, GetRewardRequestsQueryDto, RewardRequestResponseDto } from '@app/common/dtos/reward-request.dto';
 import { CreateRewardDto, RewardResponseDto } from '@app/common/dtos/reward.dto';
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { catchError, map, Observable } from 'rxjs';
 import { ResponseLoginDto, ResponseRefreshTokenDto, ResponseUpdateUserRolesDto } from './dtos/response.auth.dto';
@@ -203,19 +214,28 @@ export class ApiGatewayService {
    * @param serviceName 서비스 이름
    */
   private handleServiceError(error: any, serviceName: string): never {
-    // 에러 상태 코드가 401이면 UnauthorizedException 재생성
-    if (error.status === 401 || error.statusCode === 401) {
-      const message = error.message || '인증에 실패했습니다.';
-      throw new UnauthorizedException(message);
+    const statusCode = error.status || error.statusCode || 500;
+    const message = error.message || `${serviceName} service error`;
+    const errorType = error.error || 'Internal Server Error';
+
+    // 상태 코드에 따른 예외 생성
+    switch (statusCode) {
+      case HttpStatus.BAD_REQUEST:
+        throw new BadRequestException(message);
+      case HttpStatus.UNAUTHORIZED:
+        throw new UnauthorizedException(message);
+      case HttpStatus.FORBIDDEN:
+        throw new ForbiddenException(message);
+      case HttpStatus.NOT_FOUND:
+        throw new NotFoundException(message);
+      case HttpStatus.CONFLICT:
+        throw new ConflictException(message);
+      default:
+        throw new InternalServerErrorException({
+          statusCode,
+          message,
+          error: errorType,
+        });
     }
-
-    // 서비스별 커스텀 에러 응답 또는 기본 에러 응답
-    const errorResponse = {
-      statusCode: error.status || 500,
-      message: error.message || `${serviceName} service error`,
-      error: error.error || 'Internal Server Error',
-    };
-
-    throw new Error(JSON.stringify(errorResponse));
   }
 }
