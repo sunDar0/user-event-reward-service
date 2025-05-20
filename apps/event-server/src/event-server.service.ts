@@ -1,5 +1,10 @@
 import { CreateEventDto, EventResponseDto, EventService, RewardRequestService, RewardService } from '@app/common';
-import { CreateRewardRequestDto, CreateRewardRequestWithEventDto, RewardRequestResponseDto } from '@app/common/dtos/reward-request.dto';
+import {
+  CreateRewardRequestDto,
+  CreateRewardRequestWithEventDto,
+  GetRewardRequestsQueryDto,
+  RewardRequestResponseDto,
+} from '@app/common/dtos/reward-request.dto';
 import { CreateRewardDto } from '@app/common/dtos/reward.dto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -54,26 +59,14 @@ export class EventServerService {
     try {
       // 이벤트 존재 확인 및 보상 목록 조회
       const event = await this.eventService.findById(dto.eventId);
-      if (!event) {
-        throw new RpcException({
-          message: '이벤트를 찾을 수 없습니다.',
-          status: HttpStatus.NOT_FOUND,
-        });
-      }
-      if (!event.rewards || event.rewards.length === 0) {
-        throw new RpcException({
-          message: '해당 이벤트에 등록된 보상이 없습니다.',
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
+      if (!event) throw new RpcException({ message: '이벤트를 찾을 수 없습니다.', status: HttpStatus.NOT_FOUND });
+
+      if (!event.rewards || event.rewards.length === 0)
+        throw new RpcException({ message: '해당 이벤트에 등록된 보상이 없습니다.', status: HttpStatus.BAD_REQUEST });
+
       // 이벤트 조건 검증
-      const isConditionMet = await this.eventService.checkEventCondition(dto.completedInfo, event);
-      if (!isConditionMet) {
-        throw new RpcException({
-          message: '이벤트 조건을 충족하지 않았습니다.',
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
+      const checkEventCondition = await this.eventService.checkEventCondition(dto.completedInfo, event);
+      if (!checkEventCondition) throw new RpcException({ message: '이벤트 조건을 충족하지 않았습니다.', status: HttpStatus.BAD_REQUEST });
 
       // 이벤트와 보상 정보를 포함한 DTO 생성
       const requestWithEventDto: CreateRewardRequestWithEventDto = {
@@ -105,7 +98,7 @@ export class EventServerService {
   }
 
   // 전체 보상 요청 목록 조회 (필터링 가능)
-  async getAllRewardRequests(filters: Record<string, any> = {}): Promise<RewardRequestResponseDto[]> {
+  async getAllRewardRequests(filters: GetRewardRequestsQueryDto): Promise<RewardRequestResponseDto[]> {
     try {
       return await this.rewardRequestService.getAllRewardRequests(filters);
     } catch (error) {
