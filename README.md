@@ -94,6 +94,9 @@ cd user-event-reward-service-msa
 
 2. 의존성 설치
 ```bash
+#pnpm 미설치된 경우 
+npm install -g pnpm
+#pnpm 설치된 경우
 pnpm install
 ```
 
@@ -252,13 +255,18 @@ user-event-reward-service-msa/
   - 개발/운영 환경별 에러 처리 분리
 
 ## 테스트
-
+### 실행 방법
+```bash
+# 패스 유무 체크
+pn t test
+# 커버리지 확인
+pn t test:cov
+```
+### 테스트 방식
 - **단위 테스트**
   - Jest를 사용한 서비스 단위 테스트
   - 각 마이크로서비스별 독립적인 테스트
   - Mock을 활용한 의존성 격리
-
-- **통합 테스트**
-  - 마이크로서비스 간 통신 테스트
-  - MongoDB 트랜잭션 테스트
-  - API 엔드포인트 테스트
+- **테스트 케이스**
+  - api.gateway.controller
+  - api.gateway.servcie
