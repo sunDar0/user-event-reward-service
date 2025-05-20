@@ -1,5 +1,5 @@
 import { CreateEventDto, EventResponseDto, RegisterUserDto, UpdateUserRolesDto, UserInfoDto, UserLoginDto } from '@app/common';
-import { CreateRewardRequestDto, RewardRequestResponseDto } from '@app/common/dtos/reward-request.dto';
+import { CreateRewardRequestDto, GetRewardRequestsQueryDto, RewardRequestResponseDto } from '@app/common/dtos/reward-request.dto';
 import { CreateRewardDto, RewardResponseDto } from '@app/common/dtos/reward.dto';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -169,8 +169,8 @@ export class ApiGatewayService {
    * @param filters 필터링 조건
    * @returns 보상 요청 목록
    */
-  getAllRewardRequests(pattern: string, filters: Record<string, any> = {}) {
-    return this.forwardToService<RewardRequestResponseDto[], Record<string, any>>('EVENT', pattern, filters).pipe(
+  getAllRewardRequests(pattern: string, filters: GetRewardRequestsQueryDto) {
+    return this.forwardToService<RewardRequestResponseDto[], GetRewardRequestsQueryDto>('EVENT', pattern, filters).pipe(
       map((rewardRequests: RewardRequestResponseDto[]) => ({ rewardRequests }) satisfies ResponseGetAllRewardRequestsDto),
     );
   }
