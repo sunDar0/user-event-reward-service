@@ -103,6 +103,12 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "./coverage",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      ".*\\.module\\.ts$",
+      ".*/main\\.ts$"
+    ],
     "testEnvironment": "node",
     "roots": [
       "<rootDir>/apps/",
@@ -110,7 +116,11 @@
     ],
     "moduleNameMapper": {
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1"
-    }
+    },
+    "coverageReporters": [
+      "json-summary",
+      "lcov"
+    ]
   },
   "packageManager": "pnpm@8.15.4"
 }
