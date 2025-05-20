@@ -89,7 +89,7 @@ Strategy 패턴을 활용하여 이벤트 조건 검증 로직을 구현했습�
 1. 저장소 클론
 ```bash
 git clone {repository_url}
-cd maplestory-msa
+cd user-event-reward-service-msa
 ```
 
 2. 의존성 설치
@@ -118,13 +118,13 @@ EVENT_SERVICE_HOST=localhost
 EVENT_SERVICE_PORT=3002
 
 # JWT 설정
-JWT_ACCESS_SECRET="maplestory_secret_key_!@#A()@*#"
-JWT_REFRESH_SECRET="maplestory_secret_key_refresh_!@#A()@*#"
+JWT_ACCESS_SECRET="user-event-reward-service_secret_key_!@#A()@*#"
+JWT_REFRESH_SECRET="user-event-reward-service_secret_key_refresh_!@#A()@*#"
 ACCESS_TOKEN_EXPIRATION=1h
 REFRESH_TOKEN_EXPIRATION=7d
 
 # MongoDB
-MONGO_URI=mongodb://dar:Asd1fgh2@localhost:27017/maplestory-msa?authSource=admin
+MONGO_URI=mongodb://dar:Asd1fgh2@localhost:27017/user-event-reward-service-msa?authSource=admin
 ```
 4.1 로컬 실행 (mongodb가 로컬상에 설치되어있을 경우)
 ```bash
@@ -211,7 +211,7 @@ Swagger UI를 통해 API 문서를 확인할 수 있습니다:
 ## 프로젝트 구조
 
 ```
-maplestory-msa/
+user-event-reward-service-msa/
 ├── apps/                      # 마이크로서비스 애플리케이션
 │   ├── api-gateway/          # API 게이트웨이 서버
 │   ├── auth-server/         # 인증 서버
