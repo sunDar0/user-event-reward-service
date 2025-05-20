@@ -3,7 +3,7 @@ db = db.getSiblingDB('admin');
 db.auth('admin', '12121212');
 
 // 데이터베이스 생성 및 전환
-db = db.getSiblingDB('maplestory-msa');
+db = db.getSiblingDB('user-event-reward-service-msa');
 
 // 사용자 생성
 db.createUser({
@@ -12,7 +12,7 @@ db.createUser({
   roles: [
     {
       role: 'readWrite',
-      db: 'maplestory-msa',
+      db: 'user-event-reward-service-msa',
     },
   ],
 });
