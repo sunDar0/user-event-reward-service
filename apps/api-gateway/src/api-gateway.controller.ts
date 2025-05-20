@@ -1,6 +1,14 @@
 import { AUTH_EVENT_TYPE, EVENT_EVENT_TYPE, GenerateSwaggerApiDoc, JwtAuthGuard, REWARD_EVENT_TYPE, Roles, RolesGuard, UserAuth } from '@app/common';
 import { ObjectIdPipe } from '@app/common/common.pipe';
-import { CreateEventDto, CreateRewardDto, CreateRewardRequestDto, RegisterUserDto, UpdateUserRolesDto, UserLoginDto } from '@app/common/dtos';
+import {
+  CreateEventDto,
+  CreateRewardDto,
+  CreateRewardRequestDto,
+  GetRewardRequestsQueryDto,
+  RegisterUserDto,
+  UpdateUserRolesDto,
+  UserLoginDto,
+} from '@app/common/dtos';
 import { AllExceptionsFilter, UnauthorizedExceptionFilter } from '@app/common/exception-filters';
 import { UserAuthDto } from '@app/common/interfaces';
 import { Body, Controller, Get, HttpStatus, Param, Post, Put, Query, UseFilters, UseGuards } from '@nestjs/common';
@@ -204,9 +212,10 @@ export class ApiGatewayController {
     tags: ['Event', 'Reward'],
     summary: '전체 보상 요청 내역 조회',
     description: '전체 보상 요청 내역을 조회합니다.',
+    query: { type: GetRewardRequestsQueryDto },
     responseType: ResponseGetAllRewardRequestsDto,
   })
-  getAllRewardRequests(@Query() query: any) {
+  getAllRewardRequests(@Query() query: GetRewardRequestsQueryDto) {
     return this.apiGatewayService
       .getAllRewardRequests(REWARD_EVENT_TYPE.GET_ALL_REWARD_REQUESTS, query)
       .pipe(map((rewards: ResponseGetAllRewardRequestsDto) => response(rewards, '전체 보상 요청 내역 조회 성공', HttpStatus.OK)));
